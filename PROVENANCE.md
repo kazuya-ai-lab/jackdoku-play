@@ -5,11 +5,11 @@
 ## Current distribution
 
 - Source repository: `kazuya-ai-lab/jackdoku` (Private)
-- Source `main` commit: `d12277802ee3dbc6ab85c9600c1a36f1c569f385`
-- Source change: `feat(mobile): Touch操作とスマホ表示に対応 (#15)`
-- Playtest Package run: `#4`
+- Source `main` commit: `e2fbc2e5dbd96f6ad941d2919318dcfdd6b6f4ae`
+- Source change: `fix(board): 犬配置時のセル伸長を防止 (#18)`
+- Playtest Package run: `#5`
 - Artifact: `Jackdoku.html`
-- Artifact SHA-256: `5ebcd9b118a3fbe70a65115c03f056cc4e7dded31beb799f24ae61477ef06d3a`
+- Artifact SHA-256: `b6364659a359812496a90c17a953a00a2820470dec554fb45bf021b67c63a9f9`
 - Distribution target: `index.html`
 
 ## Promotion rule
