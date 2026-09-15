@@ -1,0 +1,3282 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Jackdoku</title>
+    <style>
+      :root {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  color: #28251f;
+  background: #f7f4ed;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #f7f4ed;
+  background-image: radial-gradient(circle at top, rgba(255, 255, 255, 0.95), transparent 36rem);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid #315d79;
+  outline-offset: 2px;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.game-shell {
+  width: min(100%, 74rem);
+  margin: 0 auto;
+  padding: clamp(1rem, 2.5vw, 2rem);
+}
+
+.game-header {
+  text-align: center;
+}
+
+.header-row {
+  display: grid;
+  grid-template-columns: 7rem 1fr 7rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-button {
+  justify-self: start;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #cbbfae;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+  color: #59452f;
+  cursor: pointer;
+}
+
+.header-button-right {
+  justify-self: end;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.game-subtitle {
+  margin: 0.7rem 0 0;
+  color: #625d52;
+  font-size: 0.95rem;
+}
+
+.status-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: min(100%, 38rem);
+  margin: 1.25rem auto;
+}
+
+.status-item {
+  min-width: 0;
+  padding: 0.65rem 0.5rem;
+  border: 1px solid #ded7c8;
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.72);
+  text-align: center;
+}
+
+.status-label,
+.status-value {
+  display: block;
+}
+
+.status-label {
+  color: #756e61;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-value {
+  margin-top: 0.15rem;
+  font-size: 1rem;
+}
+
+.tutorial-panel {
+  width: min(100%, 60rem);
+  margin: 0 auto 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #d8c69c;
+  border-radius: 0.9rem;
+  background: #fff7dc;
+}
+
+.tutorial-panel[hidden] {
+  display: none;
+}
+
+.tutorial-title {
+  display: block;
+  color: #664a1f;
+}
+
+.tutorial-text {
+  margin: 0.25rem 0 0;
+  color: #6e5a37;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.play-area {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  align-items: start;
+  gap: clamp(1rem, 3vw, 2rem);
+  max-width: 60rem;
+  margin: 0 auto;
+}
+
+.board {
+  --board-size: 5;
+  display: grid;
+  grid-template-columns: repeat(var(--board-size), minmax(0, 1fr));
+  width: min(100%, 38rem);
+  aspect-ratio: 1;
+  justify-self: center;
+  border: 3px solid #3b3831;
+  border-radius: 0.45rem;
+  overflow: hidden;
+  background: #d5cec0;
+  box-shadow: 0 0.9rem 2.2rem rgba(58, 50, 39, 0.12);
+  user-select: none;
+  touch-action: none;
+}
+
+.board-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid rgba(72, 66, 56, 0.26);
+  color: #2d2a24;
+  cursor: pointer;
+  transition:
+    filter 120ms ease,
+    transform 120ms ease,
+    box-shadow 140ms ease;
+}
+
+.board-cell:hover:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+.board-cell:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.board-cell:disabled {
+  cursor: default;
+}
+
+.board-cell.hint-attention {
+  z-index: 1;
+  box-shadow: inset 0 0 0 4px rgba(49, 93, 121, 0.5);
+}
+
+.board-cell.hint-related {
+  z-index: 1;
+  box-shadow: inset 0 0 0 4px rgba(181, 128, 31, 0.55);
+}
+
+.board-cell.hint-target {
+  z-index: 2;
+  box-shadow: inset 0 0 0 5px rgba(42, 120, 72, 0.72);
+}
+
+.board-cell.region-top {
+  border-top: 3px solid #3b3831;
+}
+
+.board-cell.region-right {
+  border-right: 3px solid #3b3831;
+}
+
+.board-cell.region-bottom {
+  border-bottom: 3px solid #3b3831;
+}
+
+.board-cell.region-left {
+  border-left: 3px solid #3b3831;
+}
+
+.region-tone-0 {
+  background: #f5e9cc;
+}
+
+.region-tone-1 {
+  background: #e7efe5;
+}
+
+.region-tone-2 {
+  background: #e8edf4;
+}
+
+.region-tone-3 {
+  background: #f2e5df;
+}
+
+.region-tone-4 {
+  background: #eee6f2;
+}
+
+.region-tone-5 {
+  background: #e4efed;
+}
+
+.cell-x {
+  font-size: clamp(1.25rem, 5vw, 2.7rem);
+  font-weight: 300;
+  line-height: 1;
+  color: #8d877b;
+}
+
+.cell-dog {
+  width: 72%;
+  height: 72%;
+  pointer-events: none;
+  filter: drop-shadow(0 0.08rem 0.06rem rgba(58, 42, 28, 0.16));
+}
+
+.cell-error {
+  animation: cell-error 420ms ease-out;
+}
+
+@keyframes cell-error {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 0 rgba(172, 53, 38, 0);
+  }
+  35% {
+    box-shadow: inset 0 0 0 5px rgba(172, 53, 38, 0.72);
+  }
+}
+
+.action-panel {
+  padding: 1rem;
+  border: 1px solid #ded7c8;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.action-panel h2 {
+  margin: 0 0 0.8rem;
+  font-size: 1rem;
+}
+
+.action-button {
+  width: 100%;
+  padding: 0.72rem 0.85rem;
+  border: 1px solid #59452f;
+  border-radius: 0.7rem;
+  background: #59452f;
+  color: #fff;
+  cursor: pointer;
+}
+
+.action-button + .action-button {
+  margin-top: 0.5rem;
+}
+
+.action-button:disabled {
+  border-color: #c5bdae;
+  background: #d8d1c5;
+  color: #7c7569;
+  cursor: default;
+}
+
+.action-button-secondary {
+  background: transparent;
+  color: #59452f;
+}
+
+.hint-box {
+  min-height: 8.2rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: #f6f2e9;
+}
+
+.hint-title {
+  display: block;
+  color: #4e463a;
+  font-size: 0.88rem;
+}
+
+.hint-text {
+  margin: 0.35rem 0 0;
+  color: #6d665a;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.input-help,
+.feedback,
+.build-status {
+  color: #6d665a;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.input-help {
+  margin: 1rem 0 0;
+}
+
+.feedback {
+  min-height: 3.8em;
+  margin: 0.8rem 0 0;
+  color: #79422f;
+}
+
+.build-status {
+  margin: 1.25rem 0 0;
+  text-align: center;
+  opacity: 0.68;
+}
+
+.restart-dialog,
+.level-dialog,
+.settings-dialog,
+.clear-dialog {
+  max-width: min(32rem, calc(100vw - 2rem));
+  padding: 1.25rem;
+  border: 0;
+  border-radius: 1rem;
+  color: #28251f;
+  background: #fffdf8;
+  box-shadow: 0 1.4rem 4rem rgba(28, 24, 18, 0.28);
+}
+
+.restart-dialog::backdrop,
+.level-dialog::backdrop,
+.settings-dialog::backdrop,
+.clear-dialog::backdrop {
+  background: rgba(39, 34, 28, 0.45);
+}
+
+.restart-dialog h2,
+.level-dialog h2,
+.settings-dialog h2,
+.clear-dialog h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.restart-dialog p,
+.level-dialog > p,
+.settings-dialog > p {
+  margin: 0.7rem 0 1.1rem;
+  color: #6d665a;
+}
+
+.dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.dialog-actions .action-button {
+  margin: 0;
+}
+
+.level-dialog {
+  width: min(44rem, calc(100vw - 2rem));
+  max-width: min(44rem, calc(100vw - 2rem));
+  max-height: min(82vh, 46rem);
+  overflow: auto;
+}
+
+.level-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.level-tile {
+  display: grid;
+  gap: 0.2rem;
+  min-height: 5.7rem;
+  padding: 0.75rem;
+  border: 1px solid #d4c9b8;
+  border-radius: 0.8rem;
+  background: #fff;
+  color: #3f392f;
+  text-align: left;
+  cursor: pointer;
+}
+
+.level-tile[data-state='current'] {
+  border-color: #315d79;
+  box-shadow: inset 0 0 0 2px rgba(49, 93, 121, 0.24);
+}
+
+.level-tile[data-state='cleared'] {
+  background: #eef6ee;
+}
+
+.level-tile[data-state='locked'] {
+  background: #eeeae2;
+  color: #8d877b;
+  cursor: default;
+}
+
+.level-tile span,
+.level-tile small {
+  font-size: 0.75rem;
+}
+
+.settings-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.setting-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem;
+  border: 1px solid #ded7c8;
+  border-radius: 0.8rem;
+  background: #f8f4eb;
+  cursor: pointer;
+}
+
+.setting-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.setting-copy small {
+  color: #6d665a;
+  line-height: 1.4;
+}
+
+.setting-row input {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: #59452f;
+}
+
+.clear-dialog {
+  text-align: center;
+}
+
+.clear-mascot {
+  animation: clear-mascot-in 420ms cubic-bezier(0.2, 0.8, 0.25, 1.2);
+}
+
+.clear-mascot .cell-dog {
+  width: 5.6rem;
+  height: 5.6rem;
+}
+
+@keyframes clear-mascot-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.clear-level {
+  margin: 0.45rem 0 0.8rem;
+  color: #6d665a;
+}
+
+.clear-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+}
+
+.clear-stats strong {
+  padding: 0.65rem;
+  border-radius: 0.65rem;
+  background: #f4efe5;
+  font-size: 0.85rem;
+}
+
+#app[data-reduced-motion='true'] .board-cell {
+  transition: none;
+}
+
+#app[data-reduced-motion='true'] .cell-error {
+  animation: none;
+  box-shadow: inset 0 0 0 4px rgba(172, 53, 38, 0.72);
+}
+
+#app[data-reduced-motion='true'] .clear-mascot {
+  animation: none;
+}
+
+@media (max-width: 900px) {
+  .level-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .game-shell {
+    padding-inline: 0.75rem;
+  }
+
+  .header-row {
+    grid-template-columns: 5.8rem 1fr 5.8rem;
+  }
+
+  .header-button {
+    padding-inline: 0.55rem;
+    font-size: 0.82rem;
+  }
+
+  .game-subtitle {
+    font-size: 0.86rem;
+  }
+
+  .status-bar {
+    margin-block: 1rem;
+  }
+
+  .play-area {
+    grid-template-columns: 1fr;
+  }
+
+  .action-panel {
+    width: min(100%, 38rem);
+    justify-self: center;
+  }
+
+  .input-help,
+  .feedback {
+    text-align: center;
+  }
+
+  .level-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 440px) {
+  .header-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .header-row h1 {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .header-row .header-button {
+    grid-row: 2;
+  }
+
+  .header-button-right {
+    justify-self: end;
+  }
+
+  .status-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .level-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-cell {
+    transition: none;
+  }
+
+  .cell-error {
+    animation: none;
+    box-shadow: inset 0 0 0 4px rgba(172, 53, 38, 0.72);
+  }
+
+  .clear-mascot {
+    animation: none;
+  }
+}
+
+
+.mobile-input-mode {
+  display: none;
+}
+
+@media (max-width: 760px), (pointer: coarse) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .game-shell {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .play-area {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .board {
+    width: min(100%, 38rem);
+    max-width: calc(100vw - 1.5rem);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-input-mode {
+    grid-template-columns: auto minmax(4.5rem, 1fr) minmax(4.5rem, 1fr);
+    align-items: center;
+    gap: 0.55rem;
+    width: min(100%, 38rem);
+    justify-self: center;
+    padding: 0.65rem;
+    border: 1px solid #ded7c8;
+    border-radius: 0.9rem;
+    background: rgba(255, 255, 255, 0.86);
+  }
+
+  .mobile-input-label {
+    color: #6d665a;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .mobile-input-button {
+    min-height: 3rem;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid #a89883;
+    border-radius: 0.75rem;
+    background: #fffdf8;
+    color: #59452f;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .mobile-input-button[aria-pressed='true'] {
+    border-color: #59452f;
+    background: #59452f;
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  }
+
+  .action-button,
+  .header-button,
+  .level-tile,
+  .setting-row {
+    min-height: 2.75rem;
+  }
+
+  .restart-dialog,
+  .level-dialog,
+  .settings-dialog,
+  .clear-dialog {
+    max-height: calc(100dvh - 1.5rem);
+    overflow: auto;
+  }
+}
+
+@media (pointer: coarse) {
+  .mobile-input-mode {
+    display: grid;
+  }
+}
+
+@media (max-width: 440px) {
+  .game-shell {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+
+  .game-subtitle {
+    line-height: 1.45;
+  }
+
+  .board {
+    max-width: calc(100vw - 1rem);
+  }
+
+  .mobile-input-mode {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .mobile-input-label {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+
+  .action-panel {
+    padding: 0.85rem;
+  }
+
+  .hint-box {
+    min-height: 0;
+  }
+
+  .input-help {
+    margin-top: 0.75rem;
+  }
+}
+
+    </style>
+  </head>
+  <body>
+    <main id="app" aria-live="polite"></main>
+    <script>
+      "use strict";
+(() => {
+  // src/audio/sfx.ts
+  var TONES = {
+    mark: [{ frequency: 440, duration: 0.045, gain: 0.025 }],
+    dog: [
+      { frequency: 520, duration: 0.07, gain: 0.035 },
+      { frequency: 680, duration: 0.09, delay: 0.035, gain: 0.03 }
+    ],
+    undo: [{ frequency: 330, duration: 0.07, gain: 0.025, type: "triangle" }],
+    mistake: [
+      { frequency: 170, duration: 0.1, gain: 0.025, type: "square" },
+      { frequency: 135, duration: 0.12, delay: 0.07, gain: 0.02, type: "square" }
+    ],
+    clear: [
+      { frequency: 523.25, duration: 0.12, gain: 0.03 },
+      { frequency: 659.25, duration: 0.12, delay: 0.09, gain: 0.03 },
+      { frequency: 783.99, duration: 0.18, delay: 0.18, gain: 0.035 }
+    ]
+  };
+  function createSfxPlayer(isEnabled) {
+    let context = null;
+    function getContext() {
+      if (context) {
+        return context;
+      }
+      try {
+        context = new AudioContext();
+        return context;
+      } catch {
+        return null;
+      }
+    }
+    function play(name) {
+      if (!isEnabled()) {
+        return;
+      }
+      const audioContext = getContext();
+      if (!audioContext) {
+        return;
+      }
+      if (audioContext.state === "suspended") {
+        void audioContext.resume().catch(() => void 0);
+      }
+      const start = audioContext.currentTime;
+      for (const tone of TONES[name]) {
+        const toneStart = start + (tone.delay ?? 0);
+        const toneEnd = toneStart + tone.duration;
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = tone.type ?? "sine";
+        oscillator.frequency.setValueAtTime(tone.frequency, toneStart);
+        gain.gain.setValueAtTime(tone.gain ?? 0.03, toneStart);
+        gain.gain.exponentialRampToValueAtTime(1e-4, toneEnd);
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start(toneStart);
+        oscillator.stop(toneEnd);
+      }
+    }
+    return { play };
+  }
+
+  // src/game/actions.ts
+  var toggleExcluded = (cell) => ({ type: "TOGGLE_EXCLUDED", cell });
+  var placeDog = (cell) => ({ type: "PLACE_DOG", cell });
+  var removeDog = (cell) => ({ type: "REMOVE_DOG", cell });
+  var bulkSetExcluded = (cells) => ({
+    type: "BULK_SET_EXCLUDED",
+    cells
+  });
+  var bulkClearExcluded = (cells) => ({
+    type: "BULK_CLEAR_EXCLUDED",
+    cells
+  });
+  var undo = () => ({ type: "UNDO" });
+  var restart = () => ({ type: "RESTART" });
+  var pauseSessionTimer = () => ({ type: "PAUSE_TIMER" });
+  var resumeSessionTimer = () => ({ type: "RESUME_TIMER" });
+
+  // src/puzzle/types.ts
+  function cellToIndex(size, cell) {
+    return cell.row * size + cell.col;
+  }
+  function indexToCell(size, index) {
+    return {
+      row: Math.floor(index / size),
+      col: index % size
+    };
+  }
+  function getRegionId(puzzle2, cell) {
+    return puzzle2.regions[cellToIndex(puzzle2.size, cell)];
+  }
+
+  // src/puzzle/rules.ts
+  function isCellInBounds(size, cell) {
+    return Number.isInteger(cell.row) && Number.isInteger(cell.col) && cell.row >= 0 && cell.row < size && cell.col >= 0 && cell.col < size;
+  }
+  function areCellsAdjacent(a, b) {
+    if (a.row === b.row && a.col === b.col) {
+      return false;
+    }
+    return Math.abs(a.row - b.row) <= 1 && Math.abs(a.col - b.col) <= 1;
+  }
+  function isPlacementAllowed(puzzle2, placements, candidate) {
+    if (!isCellInBounds(puzzle2.size, candidate)) {
+      return false;
+    }
+    if (placements.length !== puzzle2.size || placements[candidate.row] !== null) {
+      return false;
+    }
+    const candidateRegion = getRegionId(puzzle2, candidate);
+    if (candidateRegion === void 0) {
+      return false;
+    }
+    for (let row = 0; row < placements.length; row += 1) {
+      const col = placements[row];
+      if (col === null) {
+        continue;
+      }
+      const placed = { row, col };
+      if (col === candidate.col) {
+        return false;
+      }
+      if (getRegionId(puzzle2, placed) === candidateRegion) {
+        return false;
+      }
+      if (areCellsAdjacent(placed, candidate)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  function isCompleteSolutionValid(puzzle2, solution) {
+    if (solution.length !== puzzle2.size) {
+      return false;
+    }
+    const placements = Array.from({ length: puzzle2.size }, () => null);
+    for (let row = 0; row < puzzle2.size; row += 1) {
+      const col = solution[row];
+      if (!Number.isInteger(col)) {
+        return false;
+      }
+      const candidate = { row, col };
+      if (!isPlacementAllowed(puzzle2, placements, candidate)) {
+        return false;
+      }
+      placements[row] = col;
+    }
+    return true;
+  }
+
+  // src/puzzle/validate.ts
+  var ORTHOGONAL_DELTAS = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1]
+  ];
+  function isRegionConnected(puzzle2, regionId) {
+    const indices = [];
+    for (let index = 0; index < puzzle2.regions.length; index += 1) {
+      if (puzzle2.regions[index] === regionId) {
+        indices.push(index);
+      }
+    }
+    if (indices.length === 0) {
+      return false;
+    }
+    const target = new Set(indices);
+    const visited = /* @__PURE__ */ new Set([indices[0]]);
+    const queue = [indices[0]];
+    for (let cursor = 0; cursor < queue.length; cursor += 1) {
+      const index = queue[cursor];
+      const cell = indexToCell(puzzle2.size, index);
+      for (const [rowDelta, colDelta] of ORTHOGONAL_DELTAS) {
+        const row = cell.row + rowDelta;
+        const col = cell.col + colDelta;
+        if (row < 0 || row >= puzzle2.size || col < 0 || col >= puzzle2.size) {
+          continue;
+        }
+        const neighborIndex = row * puzzle2.size + col;
+        if (target.has(neighborIndex) && !visited.has(neighborIndex)) {
+          visited.add(neighborIndex);
+          queue.push(neighborIndex);
+        }
+      }
+    }
+    return visited.size === target.size;
+  }
+  function validatePuzzleStructure(puzzle2) {
+    const issues = [];
+    if (!Number.isInteger(puzzle2.size) || puzzle2.size <= 0) {
+      issues.push({ code: "invalid-size", message: "size must be a positive integer." });
+      return { valid: false, issues };
+    }
+    const expectedCellCount = puzzle2.size * puzzle2.size;
+    if (puzzle2.regions.length !== expectedCellCount) {
+      issues.push({
+        code: "region-map-length",
+        message: `regions must contain exactly ${expectedCellCount} cells.`
+      });
+    }
+    const invalidRegionId = puzzle2.regions.find(
+      (regionId) => !Number.isInteger(regionId) || regionId < 0
+    );
+    if (invalidRegionId !== void 0) {
+      issues.push({
+        code: "invalid-region-id",
+        message: "region IDs must be non-negative integers."
+      });
+    }
+    const regionIds = [...new Set(puzzle2.regions)].sort((a, b) => a - b);
+    if (regionIds.length !== puzzle2.size) {
+      issues.push({
+        code: "region-count",
+        message: `expected ${puzzle2.size} regions but found ${regionIds.length}.`
+      });
+    }
+    if (puzzle2.regions.length === expectedCellCount && invalidRegionId === void 0) {
+      for (const regionId of regionIds) {
+        if (!isRegionConnected(puzzle2, regionId)) {
+          issues.push({
+            code: "region-disconnected",
+            message: `region ${regionId} is not 4-neighborhood connected.`,
+            regionId
+          });
+        }
+      }
+    }
+    if (puzzle2.solution !== void 0) {
+      if (puzzle2.solution.length !== puzzle2.size) {
+        issues.push({
+          code: "solution-length",
+          message: `solution must contain exactly ${puzzle2.size} columns.`
+        });
+      } else if (puzzle2.solution.some((col) => !Number.isInteger(col) || col < 0 || col >= puzzle2.size)) {
+        issues.push({
+          code: "solution-column",
+          message: "solution columns must be integers inside the board."
+        });
+      } else if (!isCompleteSolutionValid(puzzle2, puzzle2.solution)) {
+        issues.push({
+          code: "solution-rule-violation",
+          message: "embedded solution violates one or more puzzle rules."
+        });
+      }
+    }
+    return {
+      valid: issues.length === 0,
+      issues
+    };
+  }
+
+  // src/game/timer.ts
+  function elapsedDelta(startedAt, nowMs) {
+    return Math.max(0, nowMs - startedAt);
+  }
+  function createSessionTimer() {
+    return { status: "ready", elapsedMs: 0 };
+  }
+  function startTimer(timer, nowMs) {
+    if (timer.status !== "ready") {
+      return timer;
+    }
+    return { status: "running", elapsedMs: 0, runningSinceMs: nowMs };
+  }
+  function pauseTimer(timer, nowMs) {
+    if (timer.status !== "running") {
+      return timer;
+    }
+    return {
+      status: "paused",
+      elapsedMs: timer.elapsedMs + elapsedDelta(timer.runningSinceMs, nowMs)
+    };
+  }
+  function resumeTimer(timer, nowMs) {
+    if (timer.status !== "paused") {
+      return timer;
+    }
+    return { status: "running", elapsedMs: timer.elapsedMs, runningSinceMs: nowMs };
+  }
+  function stopTimer(timer, nowMs) {
+    if (timer.status === "running") {
+      return {
+        status: "stopped",
+        elapsedMs: timer.elapsedMs + elapsedDelta(timer.runningSinceMs, nowMs)
+      };
+    }
+    if (timer.status === "paused") {
+      return { status: "stopped", elapsedMs: timer.elapsedMs };
+    }
+    if (timer.status === "ready") {
+      return { status: "stopped", elapsedMs: 0 };
+    }
+    return timer;
+  }
+  function elapsedMs(timer, nowMs) {
+    if (timer.status === "running") {
+      return timer.elapsedMs + elapsedDelta(timer.runningSinceMs, nowMs);
+    }
+    return timer.elapsedMs;
+  }
+
+  // src/game/session.ts
+  var INITIAL_TREATS = 3;
+  function assertPlayablePuzzle(puzzle2) {
+    const validation = validatePuzzleStructure(puzzle2);
+    if (!validation.valid || puzzle2.solution === void 0) {
+      const codes = validation.issues.map((issue) => issue.code).join(", ");
+      throw new Error(`Game session requires a validated puzzle with canonical solution: ${codes}`);
+    }
+  }
+  function createGameSession(puzzle2) {
+    assertPlayablePuzzle(puzzle2);
+    return {
+      puzzleId: puzzle2.id,
+      marks: Array.from({ length: puzzle2.size * puzzle2.size }, () => "empty"),
+      treatsRemaining: INITIAL_TREATS,
+      completed: false,
+      history: [],
+      timer: createSessionTimer()
+    };
+  }
+  function getCellMark(puzzle2, session2, cell) {
+    if (!isCellInBounds(puzzle2.size, cell)) {
+      return void 0;
+    }
+    return session2.marks[cellToIndex(puzzle2.size, cell)];
+  }
+  function dogCount(session2) {
+    return session2.marks.filter((mark) => mark === "dog").length;
+  }
+  function canUndo(session2) {
+    return !session2.completed && session2.timer.status !== "paused" && session2.history.length > 0;
+  }
+  function isComplete(puzzle2, marks) {
+    if (puzzle2.solution === void 0) {
+      return false;
+    }
+    return puzzle2.solution.every(
+      (col, row) => marks[cellToIndex(puzzle2.size, { row, col })] === "dog"
+    );
+  }
+  function uniqueValidIndices(puzzle2, cells) {
+    const indices = /* @__PURE__ */ new Set();
+    for (const cell of cells) {
+      if (isCellInBounds(puzzle2.size, cell)) {
+        indices.add(cellToIndex(puzzle2.size, cell));
+      }
+    }
+    return [...indices].sort((a, b) => a - b);
+  }
+  function applyMarkChanges(puzzle2, session2, changes, nowMs) {
+    if (changes.length === 0) {
+      return { session: session2, outcome: "noop" };
+    }
+    const marks = [...session2.marks];
+    for (const change of changes) {
+      marks[change.index] = change.after;
+    }
+    const transaction = { kind: "marks", changes };
+    let timer = startTimer(session2.timer, nowMs);
+    const completed = isComplete(puzzle2, marks);
+    if (completed) {
+      timer = stopTimer(timer, nowMs);
+    }
+    return {
+      session: {
+        ...session2,
+        marks,
+        completed,
+        history: [...session2.history, transaction],
+        timer
+      },
+      outcome: "changed"
+    };
+  }
+  function toggleExcluded2(puzzle2, session2, cell, nowMs) {
+    const mark = getCellMark(puzzle2, session2, cell);
+    if (mark === void 0 || mark === "dog") {
+      return { session: session2, outcome: "noop" };
+    }
+    const index = cellToIndex(puzzle2.size, cell);
+    const after = mark === "excluded" ? "empty" : "excluded";
+    return applyMarkChanges(puzzle2, session2, [{ index, before: mark, after }], nowMs);
+  }
+  function placeDog2(puzzle2, session2, cell, nowMs) {
+    const mark = getCellMark(puzzle2, session2, cell);
+    if (mark !== "empty") {
+      return { session: session2, outcome: "noop" };
+    }
+    if (puzzle2.solution[cell.row] !== cell.col) {
+      return {
+        session: {
+          ...session2,
+          treatsRemaining: Math.max(0, session2.treatsRemaining - 1)
+        },
+        outcome: "mistake",
+        mistakeCell: cell
+      };
+    }
+    const index = cellToIndex(puzzle2.size, cell);
+    return applyMarkChanges(puzzle2, session2, [{ index, before: "empty", after: "dog" }], nowMs);
+  }
+  function removeDog2(puzzle2, session2, cell, nowMs) {
+    const mark = getCellMark(puzzle2, session2, cell);
+    if (mark !== "dog") {
+      return { session: session2, outcome: "noop" };
+    }
+    const index = cellToIndex(puzzle2.size, cell);
+    return applyMarkChanges(puzzle2, session2, [{ index, before: "dog", after: "empty" }], nowMs);
+  }
+  function bulkExcluded(puzzle2, session2, cells, mode, nowMs) {
+    const changes = [];
+    for (const index of uniqueValidIndices(puzzle2, cells)) {
+      const before = session2.marks[index];
+      if (mode === "set" && before === "empty") {
+        changes.push({ index, before, after: "excluded" });
+      } else if (mode === "clear" && before === "excluded") {
+        changes.push({ index, before, after: "empty" });
+      }
+    }
+    return applyMarkChanges(puzzle2, session2, changes, nowMs);
+  }
+  function undoSession(session2) {
+    if (!canUndo(session2)) {
+      return { session: session2, outcome: "noop" };
+    }
+    const transaction = session2.history[session2.history.length - 1];
+    const marks = [...session2.marks];
+    for (const change of transaction.changes) {
+      marks[change.index] = change.before;
+    }
+    return {
+      session: {
+        ...session2,
+        marks,
+        completed: false,
+        history: session2.history.slice(0, -1)
+      },
+      outcome: "undone"
+    };
+  }
+  function boardMutationAllowed(session2) {
+    return !session2.completed && session2.timer.status !== "paused" && session2.timer.status !== "stopped";
+  }
+  function reduceGameSession(puzzle2, session2, action, nowMs) {
+    assertPlayablePuzzle(puzzle2);
+    if (session2.puzzleId !== puzzle2.id) {
+      throw new Error(`Session puzzle mismatch: ${session2.puzzleId} !== ${puzzle2.id}`);
+    }
+    if (action.type === "PAUSE_TIMER") {
+      const timer = pauseTimer(session2.timer, nowMs);
+      return timer === session2.timer ? { session: session2, outcome: "noop" } : { session: { ...session2, timer }, outcome: "timer" };
+    }
+    if (action.type === "RESUME_TIMER") {
+      const timer = resumeTimer(session2.timer, nowMs);
+      return timer === session2.timer ? { session: session2, outcome: "noop" } : { session: { ...session2, timer }, outcome: "timer" };
+    }
+    if (action.type === "RESTART") {
+      return { session: createGameSession(puzzle2), outcome: "restarted" };
+    }
+    if (action.type === "UNDO") {
+      return undoSession(session2);
+    }
+    if (!boardMutationAllowed(session2)) {
+      return { session: session2, outcome: "noop" };
+    }
+    switch (action.type) {
+      case "TOGGLE_EXCLUDED":
+        return toggleExcluded2(puzzle2, session2, action.cell, nowMs);
+      case "PLACE_DOG":
+        return placeDog2(puzzle2, session2, action.cell, nowMs);
+      case "REMOVE_DOG":
+        return removeDog2(puzzle2, session2, action.cell, nowMs);
+      case "BULK_SET_EXCLUDED":
+        return bulkExcluded(puzzle2, session2, action.cells, "set", nowMs);
+      case "BULK_CLEAR_EXCLUDED":
+        return bulkExcluded(puzzle2, session2, action.cells, "clear", nowMs);
+    }
+  }
+
+  // src/puzzle/accepted-bank.ts
+  var ACCEPTED_SAMPLE_BANK = [
+    { "id": "generated-5-pr-h-runtime:0", "size": 5, "regions": [0, 2, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 2, 2, 1, 2, 2, 2, 2, 3, 2, 2, 4, 3, 3], "solution": [0, 3, 1, 4, 2], "difficulty": { "band": "easy", "score": 28, "maxRuleRank": 1, "totalSteps": 8, "lockRuleCount": 0 }, "generation": { "seed": "pr-h-runtime:0", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "a0b080b7" },
+    { "id": "generated-5-pr-i-sample-5:25", "size": 5, "regions": [1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 2, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3], "solution": [3, 1, 4, 2, 0], "difficulty": { "band": "easy", "score": 29, "maxRuleRank": 1, "totalSteps": 9, "lockRuleCount": 0 }, "generation": { "seed": "pr-i-sample-5:25", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "8f797d86" },
+    { "id": "generated-5-pr-i-sample-5:27", "size": 5, "regions": [0, 0, 0, 0, 2, 1, 0, 0, 0, 2, 3, 3, 0, 0, 2, 3, 3, 0, 4, 2, 4, 4, 4, 4, 2], "solution": [2, 0, 4, 1, 3], "difficulty": { "band": "easy", "score": 29, "maxRuleRank": 1, "totalSteps": 9, "lockRuleCount": 0 }, "generation": { "seed": "pr-i-sample-5:27", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "72efdb75" },
+    { "id": "generated-5-pr-i-sample-5:48", "size": 5, "regions": [0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 2, 2, 2, 1, 1, 3, 2, 2, 1, 1, 2, 2, 2, 4, 1], "solution": [1, 4, 2, 0, 3], "difficulty": { "band": "easy", "score": 29, "maxRuleRank": 1, "totalSteps": 9, "lockRuleCount": 0 }, "generation": { "seed": "pr-i-sample-5:48", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "4992fc00" },
+    { "id": "generated-5-pr-i-sample-5:59", "size": 5, "regions": [1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 2, 1, 1, 3, 3, 2, 2, 3, 3, 3, 2, 4, 3, 3, 3], "solution": [4, 2, 0, 3, 1], "difficulty": { "band": "easy", "score": 29, "maxRuleRank": 1, "totalSteps": 9, "lockRuleCount": 0 }, "generation": { "seed": "pr-i-sample-5:59", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "c0618cb3" },
+    { "id": "generated-5-pr-i-sample-5:82", "size": 5, "regions": [0, 0, 0, 0, 0, 0, 0, 1, 4, 4, 3, 3, 4, 4, 2, 3, 3, 4, 4, 4, 3, 3, 4, 4, 4], "solution": [0, 2, 4, 1, 3], "difficulty": { "band": "easy", "score": 29, "maxRuleRank": 1, "totalSteps": 9, "lockRuleCount": 0 }, "generation": { "seed": "pr-i-sample-5:82", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "fbce5588" },
+    { "id": "generated-5-pr-i-sample-5:75", "size": 5, "regions": [1, 1, 0, 0, 0, 2, 1, 1, 3, 3, 2, 2, 3, 3, 3, 2, 2, 2, 3, 3, 2, 4, 3, 3, 3], "solution": [4, 2, 0, 3, 1], "difficulty": { "band": "normal", "score": 36, "maxRuleRank": 2, "totalSteps": 9, "lockRuleCount": 1 }, "generation": { "seed": "pr-i-sample-5:75", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "c00a402a" },
+    { "id": "generated-5-pr-h-runtime:1", "size": 5, "regions": [0, 0, 0, 0, 2, 1, 0, 0, 0, 2, 1, 3, 3, 2, 2, 3, 3, 3, 3, 2, 3, 3, 3, 4, 2], "solution": [2, 0, 4, 1, 3], "difficulty": { "band": "normal", "score": 37, "maxRuleRank": 2, "totalSteps": 10, "lockRuleCount": 1 }, "generation": { "seed": "pr-h-runtime:1", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "1c1d06b7" },
+    { "id": "generated-5-pr-i-sample-5:105", "size": 5, "regions": [1, 1, 1, 0, 2, 1, 1, 1, 0, 2, 1, 1, 1, 0, 2, 4, 4, 3, 3, 2, 4, 4, 4, 4, 2], "solution": [3, 1, 4, 2, 0], "difficulty": { "band": "normal", "score": 37, "maxRuleRank": 2, "totalSteps": 10, "lockRuleCount": 1 }, "generation": { "seed": "pr-i-sample-5:105", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "18800cb4" },
+    { "id": "generated-5-pr-i-sample-5:45", "size": 5, "regions": [0, 3, 1, 1, 1, 3, 3, 1, 1, 1, 3, 3, 3, 2, 2, 3, 3, 3, 4, 2, 3, 3, 3, 4, 4], "solution": [0, 2, 4, 1, 3], "difficulty": { "band": "normal", "score": 37, "maxRuleRank": 2, "totalSteps": 10, "lockRuleCount": 1 }, "generation": { "seed": "pr-i-sample-5:45", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "b270a7dd" },
+    { "id": "generated-5-pr-i-sample-5:98", "size": 5, "regions": [0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 3, 3, 2, 4, 1, 3, 3, 4, 4, 1, 3, 4, 4, 4, 4], "solution": [1, 4, 2, 0, 3], "difficulty": { "band": "normal", "score": 37, "maxRuleRank": 2, "totalSteps": 10, "lockRuleCount": 1 }, "generation": { "seed": "pr-i-sample-5:98", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "9d215cf1" },
+    { "id": "generated-5-pr-h-runtime:2", "size": 5, "regions": [0, 2, 1, 1, 1, 2, 2, 2, 1, 1, 2, 2, 2, 1, 3, 2, 2, 2, 3, 3, 2, 2, 4, 4, 4], "solution": [0, 3, 1, 4, 2], "difficulty": { "band": "normal", "score": 40, "maxRuleRank": 2, "totalSteps": 11, "lockRuleCount": 2 }, "generation": { "seed": "pr-h-runtime:2", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "9176c04a" },
+    { "id": "generated-6-pr-i-sample-6:268", "size": 6, "regions": [0, 2, 2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 3, 2, 2, 2, 1, 3, 3, 2, 2, 4, 4, 3, 3, 2, 2, 4, 3, 3, 5], "solution": [0, 3, 1, 4, 2, 5], "difficulty": { "band": "normal", "score": 33, "maxRuleRank": 1, "totalSteps": 10, "lockRuleCount": 0 }, "generation": { "seed": "pr-i-sample-6:268", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "aa08963f" },
+    { "id": "generated-6-pr-i-sample-6:950", "size": 6, "regions": [1, 1, 2, 2, 0, 2, 1, 2, 2, 2, 2, 2, 1, 1, 1, 2, 2, 4, 1, 3, 3, 2, 2, 4, 1, 3, 3, 2, 2, 4, 1, 1, 5, 2, 2, 4], "solution": [4, 0, 3, 1, 5, 2], "difficulty": { "band": "normal", "score": 33, "maxRuleRank": 1, "totalSteps": 10, "lockRuleCount": 0 }, "generation": { "seed": "pr-i-sample-6:950", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "0044a018" },
+    { "id": "generated-6-pr-i-sample-6:199", "size": 6, "regions": [0, 0, 0, 3, 3, 3, 0, 0, 1, 3, 3, 3, 4, 4, 1, 3, 3, 2, 4, 5, 5, 3, 3, 5, 4, 4, 5, 5, 5, 5, 4, 4, 5, 5, 5, 5], "solution": [0, 2, 5, 3, 1, 4], "difficulty": { "band": "normal", "score": 34, "maxRuleRank": 1, "totalSteps": 11, "lockRuleCount": 0 }, "generation": { "seed": "pr-i-sample-6:199", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "c43e7b8c" },
+    { "id": "generated-6-pr-i-sample-6:315", "size": 6, "regions": [1, 1, 1, 1, 0, 3, 1, 1, 1, 1, 0, 3, 1, 1, 4, 2, 3, 3, 4, 4, 4, 4, 3, 3, 4, 4, 4, 4, 3, 3, 5, 4, 4, 4, 4, 4], "solution": [4, 1, 3, 5, 2, 0], "difficulty": { "band": "normal", "score": 34, "maxRuleRank": 1, "totalSteps": 11, "lockRuleCount": 0 }, "generation": { "seed": "pr-i-sample-6:315", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "30237d47" },
+    { "id": "generated-6-pr-i-sample-6:344", "size": 6, "regions": [1, 1, 1, 2, 2, 0, 1, 1, 1, 2, 2, 2, 3, 3, 1, 3, 2, 2, 3, 3, 3, 3, 2, 2, 3, 3, 3, 4, 2, 2, 5, 3, 3, 4, 2, 2], "solution": [5, 2, 4, 1, 3, 0], "difficulty": { "band": "normal", "score": 34, "maxRuleRank": 1, "totalSteps": 11, "lockRuleCount": 0 }, "generation": { "seed": "pr-i-sample-6:344", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "784fbca5" },
+    { "id": "generated-6-pr-i-sample-6:96", "size": 6, "regions": [1, 1, 0, 1, 3, 3, 1, 1, 1, 1, 3, 3, 1, 1, 2, 2, 3, 3, 1, 4, 2, 3, 3, 3, 4, 4, 4, 3, 3, 3, 4, 4, 4, 3, 5, 3], "solution": [2, 0, 3, 5, 1, 4], "difficulty": { "band": "normal", "score": 42, "maxRuleRank": 2, "totalSteps": 12, "lockRuleCount": 1 }, "generation": { "seed": "pr-i-sample-6:96", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "6f58065c" },
+    { "id": "generated-6-pr-i-sample-6:97", "size": 6, "regions": [0, 0, 0, 0, 2, 2, 0, 0, 1, 0, 0, 2, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5], "solution": [0, 2, 5, 3, 1, 4], "difficulty": { "band": "normal", "score": 42, "maxRuleRank": 2, "totalSteps": 12, "lockRuleCount": 1 }, "generation": { "seed": "pr-i-sample-6:97", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "b6261e21" },
+    { "id": "generated-6-pr-i-sample-6:961", "size": 6, "regions": [1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 2, 4, 4, 1, 1, 1, 2, 4, 4, 4, 3, 3, 3, 4, 4, 5, 5, 5, 5, 4, 4, 5, 5, 5, 5], "solution": [4, 1, 5, 3, 0, 2], "difficulty": { "band": "normal", "score": 45, "maxRuleRank": 2, "totalSteps": 13, "lockRuleCount": 2 }, "generation": { "seed": "pr-i-sample-6:961", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "cc5334cc" },
+    { "id": "generated-6-pr-i-sample-6:780", "size": 6, "regions": [0, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 3, 3, 2, 2, 4, 4, 3, 3, 3, 4, 4, 4, 5, 5, 5, 4, 4, 4], "solution": [0, 5, 3, 1, 4, 2], "difficulty": { "band": "normal", "score": 48, "maxRuleRank": 2, "totalSteps": 14, "lockRuleCount": 3 }, "generation": { "seed": "pr-i-sample-6:780", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "91bf3926" },
+    { "id": "generated-6-pr-i-sample-6:306", "size": 6, "regions": [0, 1, 1, 1, 2, 2, 3, 3, 1, 1, 2, 2, 3, 3, 3, 2, 2, 2, 3, 3, 3, 3, 2, 4, 3, 3, 3, 3, 4, 4, 3, 3, 3, 5, 5, 4], "solution": [0, 2, 4, 1, 5, 3], "difficulty": { "band": "hard-lite", "score": 51, "maxRuleRank": 2, "totalSteps": 15, "lockRuleCount": 4 }, "generation": { "seed": "pr-i-sample-6:306", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "0fa407f8" },
+    { "id": "generated-6-pr-i-sample-6:916", "size": 6, "regions": [4, 1, 1, 1, 1, 0, 4, 1, 1, 4, 2, 0, 4, 4, 4, 4, 2, 2, 3, 3, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4], "solution": [5, 2, 4, 1, 3, 0], "difficulty": { "band": "hard-lite", "score": 51, "maxRuleRank": 2, "totalSteps": 15, "lockRuleCount": 4 }, "generation": { "seed": "pr-i-sample-6:916", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "d950e7e0" },
+    { "id": "generated-6-pr-i-sample-6:842", "size": 6, "regions": [1, 1, 1, 1, 0, 0, 2, 3, 3, 1, 1, 1, 2, 3, 3, 1, 1, 1, 3, 3, 3, 3, 1, 1, 3, 5, 3, 3, 4, 4, 5, 5, 3, 3, 3, 4], "solution": [5, 3, 0, 2, 4, 1], "difficulty": { "band": "hard-lite", "score": 52, "maxRuleRank": 2, "totalSteps": 14, "lockRuleCount": 5 }, "generation": { "seed": "pr-i-sample-6:842", "generatorVersion": "1", "logicVersion": "1" }, "duplicateHash": "65847236" }
+  ];
+  function toRuntimePuzzle(record) {
+    return {
+      id: record.id,
+      size: record.size,
+      regions: record.regions,
+      solution: record.solution
+    };
+  }
+
+  // src/puzzle/runtime-levels.ts
+  var LEVEL_1_TUTORIAL = [
+    {
+      id: "place-first-dog",
+      condition: "no-dog",
+      title: "\u307E\u305A\u306F\u72AC\u3092\u7F6E\u3044\u3066\u307F\u3088\u3046",
+      message: "\u540C\u3058\u8272\u306E\u30A8\u30EA\u30A2\u306B\u306F\u72AC\u304C1\u5339\u3060\u3051\u5165\u308A\u307E\u3059\u3002PC\u306F\u30C0\u30D6\u30EB\u30AF\u30EA\u30C3\u30AF\u307E\u305F\u306F\u53F3\u30AF\u30EA\u30C3\u30AF\u3001\u30B9\u30DE\u30DB\u306F\u300C\u72AC\u300D\u5165\u529B\u3092\u9078\u3093\u3067\u30BF\u30C3\u30D7\u3059\u308B\u3068\u72AC\u3092\u7F6E\u3051\u307E\u3059\u3002"
+    },
+    {
+      id: "mark-exclusions",
+      condition: "dog-no-x",
+      title: "\u7F6E\u3051\u306A\u3044\u5834\u6240\u3078\xD7\u3092\u4ED8\u3051\u3088\u3046",
+      message: "\u72AC\u3068\u540C\u3058\u884C\u30FB\u5217\u306B\u306F\u5225\u306E\u72AC\u3092\u7F6E\u3051\u307E\u305B\u3093\u3002PC\u306F\u5DE6\u30AF\u30EA\u30C3\u30AF\u3001\u30B9\u30DE\u30DB\u306F\u300C\xD7\u300D\u5165\u529B\u3092\u9078\u3093\u3067\u30BF\u30C3\u30D7\u3057\u3001\u7F6E\u3051\u306A\u3044\u30DE\u30B9\u3092\xD7\u306B\u3057\u3066\u5019\u88DC\u3092\u6E1B\u3089\u3057\u307E\u3059\u3002"
+    },
+    {
+      id: "remember-adjacency",
+      condition: "has-x",
+      title: "\u659C\u3081\u3082\u96A3\u308A\u5408\u3048\u307E\u305B\u3093",
+      message: "\u72AC\u3069\u3046\u3057\u306F\u4E0A\u4E0B\u5DE6\u53F3\u3060\u3051\u3067\u306A\u304F\u659C\u3081\u306B\u3082\u96A3\u308A\u5408\u3048\u307E\u305B\u3093\u3002\u8FF7\u3063\u305F\u3089Hint\u3092\u62BC\u3059\u3068\u3001\u898B\u308B\u5834\u6240\u2192\u7406\u7531\u2192\u7D50\u8AD6\u306E\u9806\u306B\u78BA\u8A8D\u3067\u304D\u307E\u3059\u3002"
+    },
+    {
+      id: "free-play",
+      condition: "free-play",
+      title: "\u3042\u3068\u306F\u81EA\u5206\u306E\u30DA\u30FC\u30B9\u3067",
+      message: "\u5404\u30A8\u30EA\u30A2\u30FB\u5404\u884C\u30FB\u5404\u5217\u306B\u72AC\u304C1\u5339\u305A\u3064\u5165\u308B\u3088\u3046\u3001\xD7\u3067\u5019\u88DC\u3092\u7D5E\u3063\u3066\u9032\u3081\u307E\u3057\u3087\u3046\u3002"
+    }
+  ];
+  function difficultyLabel(band) {
+    switch (band) {
+      case "tutorial":
+        return "Tutorial";
+      case "easy":
+        return "Easy";
+      case "normal":
+        return "Normal";
+      case "hard-lite":
+        return "Hard-lite";
+    }
+  }
+  var RUNTIME_LEVELS = ACCEPTED_SAMPLE_BANK.map(
+    (record, index) => ({
+      levelNumber: index + 1,
+      label: index === 0 ? "Tutorial" : difficultyLabel(record.difficulty.band),
+      puzzle: toRuntimePuzzle(record),
+      ...index === 0 ? { tutorial: LEVEL_1_TUTORIAL } : {}
+    })
+  );
+  function getRuntimeLevel(levelNumber) {
+    return RUNTIME_LEVELS.find((level) => level.levelNumber === levelNumber);
+  }
+  function clampRuntimeLevel(levelNumber) {
+    if (!Number.isInteger(levelNumber)) {
+      return 1;
+    }
+    return Math.min(Math.max(levelNumber, 1), RUNTIME_LEVELS.length);
+  }
+
+  // src/storage/types.ts
+  var SAVE_SCHEMA_VERSION = 1;
+  var SAVE_STORAGE_KEY = "jackdoku.save.v1";
+  function createDefaultSaveData() {
+    return {
+      schemaVersion: SAVE_SCHEMA_VERSION,
+      currentLevel: 1,
+      latestUnlockedLevel: 1,
+      completedLevels: [],
+      bestTimesMs: {},
+      settings: {
+        soundEffects: true,
+        reducedMotion: "system"
+      },
+      session: null
+    };
+  }
+
+  // src/storage/codec.ts
+  function isRecord(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+  function isPositiveInteger(value) {
+    return typeof value === "number" && Number.isInteger(value) && value >= 1;
+  }
+  function isNonNegativeNumber(value) {
+    return typeof value === "number" && Number.isFinite(value) && value >= 0;
+  }
+  function isCellMark(value) {
+    return value === "empty" || value === "excluded" || value === "dog";
+  }
+  function readSettings(value) {
+    if (!isRecord(value)) {
+      return null;
+    }
+    if (typeof value.soundEffects !== "boolean") {
+      return null;
+    }
+    if (value.reducedMotion !== "system" && value.reducedMotion !== "reduced") {
+      return null;
+    }
+    return {
+      soundEffects: value.soundEffects,
+      reducedMotion: value.reducedMotion
+    };
+  }
+  function readUndo(value, marks) {
+    if (value === null) {
+      return null;
+    }
+    if (!isRecord(value) || value.kind !== "marks" || !Array.isArray(value.changes)) {
+      return void 0;
+    }
+    if (value.changes.length === 0) {
+      return void 0;
+    }
+    const seen = /* @__PURE__ */ new Set();
+    const changes = [];
+    for (const rawChange of value.changes) {
+      if (!isRecord(rawChange)) {
+        return void 0;
+      }
+      const { index, before, after } = rawChange;
+      if (typeof index !== "number" || !Number.isInteger(index) || index < 0 || index >= marks.length || seen.has(index) || !isCellMark(before) || !isCellMark(after) || before === after || marks[index] !== after) {
+        return void 0;
+      }
+      seen.add(index);
+      changes.push({ index, before, after });
+    }
+    return { kind: "marks", changes };
+  }
+  function readSession(value, currentLevel2) {
+    if (value === null) {
+      return null;
+    }
+    if (!isRecord(value) || !Array.isArray(value.marks)) {
+      return void 0;
+    }
+    if (!isPositiveInteger(value.level) || value.level !== currentLevel2 || typeof value.puzzleId !== "string" || value.puzzleId.length === 0 || !value.marks.every(isCellMark) || typeof value.treatsRemaining !== "number" || !Number.isInteger(value.treatsRemaining) || value.treatsRemaining < 0 || value.treatsRemaining > 3 || typeof value.started !== "boolean" || !isNonNegativeNumber(value.elapsedMs) || !value.started && value.elapsedMs !== 0) {
+      return void 0;
+    }
+    const marks = [...value.marks];
+    const undo2 = readUndo(value.undo, marks);
+    if (undo2 === void 0) {
+      return void 0;
+    }
+    return {
+      level: value.level,
+      puzzleId: value.puzzleId,
+      marks,
+      treatsRemaining: value.treatsRemaining,
+      started: value.started,
+      elapsedMs: value.elapsedMs,
+      undo: undo2
+    };
+  }
+  function readBestTimes(value) {
+    if (!isRecord(value)) {
+      return null;
+    }
+    const result = {};
+    for (const [level, time] of Object.entries(value)) {
+      if (!/^[1-9]\d*$/.test(level) || !isNonNegativeNumber(time)) {
+        return null;
+      }
+      result[level] = time;
+    }
+    return result;
+  }
+  function parseSaveData(raw) {
+    let value;
+    try {
+      value = JSON.parse(raw);
+    } catch {
+      return { status: "corrupted" };
+    }
+    if (!isRecord(value)) {
+      return { status: "corrupted" };
+    }
+    if (value.schemaVersion !== SAVE_SCHEMA_VERSION) {
+      return typeof value.schemaVersion === "number" ? { status: "unsupported-schema" } : { status: "corrupted" };
+    }
+    if (!isPositiveInteger(value.currentLevel) || !isPositiveInteger(value.latestUnlockedLevel)) {
+      return { status: "corrupted" };
+    }
+    const currentLevel2 = value.currentLevel;
+    const latestUnlockedLevel = value.latestUnlockedLevel;
+    if (currentLevel2 > latestUnlockedLevel || !Array.isArray(value.completedLevels)) {
+      return { status: "corrupted" };
+    }
+    const completedLevels = [...value.completedLevels];
+    if (!completedLevels.every(isPositiveInteger)) {
+      return { status: "corrupted" };
+    }
+    if (completedLevels.some((level) => level > latestUnlockedLevel) || new Set(completedLevels).size !== completedLevels.length) {
+      return { status: "corrupted" };
+    }
+    const bestTimesMs = readBestTimes(value.bestTimesMs);
+    const settings = readSettings(value.settings);
+    const session2 = readSession(value.session, currentLevel2);
+    if (bestTimesMs === null || settings === null || session2 === void 0) {
+      return { status: "corrupted" };
+    }
+    return {
+      status: "ok",
+      data: {
+        schemaVersion: SAVE_SCHEMA_VERSION,
+        currentLevel: currentLevel2,
+        latestUnlockedLevel,
+        completedLevels,
+        bestTimesMs,
+        settings,
+        session: session2
+      }
+    };
+  }
+  function serializeSaveData(data) {
+    const raw = JSON.stringify(data);
+    if (parseSaveData(raw).status !== "ok") {
+      throw new Error("Refusing to serialize invalid Jackdoku save data.");
+    }
+    return raw;
+  }
+
+  // src/storage/local-storage.ts
+  var MemoryStorage = class {
+    values = /* @__PURE__ */ new Map();
+    getItem(key) {
+      return this.values.get(key) ?? null;
+    }
+    setItem(key, value) {
+      this.values.set(key, value);
+    }
+    removeItem(key) {
+      this.values.delete(key);
+    }
+  };
+  var PersistenceAdapter = class {
+    memory = new MemoryStorage();
+    primary;
+    persistenceMode;
+    pendingIssue;
+    constructor(primary, initialIssue) {
+      this.primary = primary;
+      this.persistenceMode = primary === null ? "memory-only" : "persistent";
+      this.pendingIssue = initialIssue;
+    }
+    get mode() {
+      return this.persistenceMode;
+    }
+    consumePendingIssue() {
+      const issue = this.pendingIssue;
+      this.pendingIssue = void 0;
+      return issue;
+    }
+    degrade() {
+      if (this.persistenceMode === "persistent") {
+        this.primary = null;
+        this.persistenceMode = "memory-only";
+        this.pendingIssue = "storage-unavailable";
+      }
+    }
+    loadFromMemory() {
+      const raw = this.memory.getItem(SAVE_STORAGE_KEY);
+      const issue = this.consumePendingIssue();
+      if (raw === null) {
+        return { data: createDefaultSaveData(), status: "empty", mode: this.mode, issue };
+      }
+      const parsed = parseSaveData(raw);
+      if (parsed.status !== "ok") {
+        this.memory.removeItem(SAVE_STORAGE_KEY);
+        return {
+          data: createDefaultSaveData(),
+          status: "recovered",
+          mode: this.mode,
+          issue: parsed.status
+        };
+      }
+      return { data: parsed.data, status: "loaded", mode: this.mode, issue };
+    }
+    load() {
+      if (this.primary === null) {
+        return this.loadFromMemory();
+      }
+      let raw;
+      try {
+        raw = this.primary.getItem(SAVE_STORAGE_KEY);
+      } catch {
+        this.degrade();
+        return this.loadFromMemory();
+      }
+      if (raw === null) {
+        return { data: createDefaultSaveData(), status: "empty", mode: this.mode };
+      }
+      const parsed = parseSaveData(raw);
+      if (parsed.status === "ok") {
+        this.memory.setItem(SAVE_STORAGE_KEY, raw);
+        return { data: parsed.data, status: "loaded", mode: this.mode };
+      }
+      try {
+        this.primary.removeItem(SAVE_STORAGE_KEY);
+      } catch {
+        this.degrade();
+      }
+      this.memory.removeItem(SAVE_STORAGE_KEY);
+      const pendingIssue = this.consumePendingIssue();
+      return {
+        data: createDefaultSaveData(),
+        status: "recovered",
+        mode: this.mode,
+        issue: pendingIssue ?? parsed.status
+      };
+    }
+    save(data) {
+      const raw = serializeSaveData(data);
+      this.memory.setItem(SAVE_STORAGE_KEY, raw);
+      if (this.primary === null) {
+        return {
+          mode: this.mode,
+          durable: false,
+          issue: this.consumePendingIssue()
+        };
+      }
+      try {
+        this.primary.setItem(SAVE_STORAGE_KEY, raw);
+        return { mode: this.mode, durable: true };
+      } catch {
+        this.degrade();
+        return {
+          mode: this.mode,
+          durable: false,
+          issue: this.consumePendingIssue()
+        };
+      }
+    }
+    clear() {
+      this.memory.removeItem(SAVE_STORAGE_KEY);
+      if (this.primary === null) {
+        return {
+          mode: this.mode,
+          durable: false,
+          issue: this.consumePendingIssue()
+        };
+      }
+      try {
+        this.primary.removeItem(SAVE_STORAGE_KEY);
+        return { mode: this.mode, durable: true };
+      } catch {
+        this.degrade();
+        return {
+          mode: this.mode,
+          durable: false,
+          issue: this.consumePendingIssue()
+        };
+      }
+    }
+  };
+  function createPersistenceAdapter(storageFactory = () => globalThis.localStorage) {
+    try {
+      const storage = storageFactory();
+      const probeKey = `${SAVE_STORAGE_KEY}.__probe__`;
+      storage.setItem(probeKey, "1");
+      storage.removeItem(probeKey);
+      return new PersistenceAdapter(storage);
+    } catch {
+      return new PersistenceAdapter(null, "storage-unavailable");
+    }
+  }
+
+  // src/storage/session-snapshot.ts
+  function cloneTransaction(transaction) {
+    return {
+      kind: "marks",
+      changes: transaction.changes.map((change) => ({ ...change }))
+    };
+  }
+  function snapshotGameSession(level, session2, nowMs) {
+    if (session2.completed) {
+      return null;
+    }
+    const started = session2.timer.status !== "ready";
+    const latestTransaction = session2.history.at(-1);
+    return {
+      level,
+      puzzleId: session2.puzzleId,
+      marks: [...session2.marks],
+      treatsRemaining: session2.treatsRemaining,
+      started,
+      elapsedMs: started ? elapsedMs(session2.timer, nowMs) : 0,
+      undo: latestTransaction ? cloneTransaction(latestTransaction) : null
+    };
+  }
+  function isCellMark2(value) {
+    return value === "empty" || value === "excluded" || value === "dog";
+  }
+  function isCorrectDog(puzzle2, index) {
+    if (puzzle2.solution === void 0) {
+      return false;
+    }
+    const row = Math.floor(index / puzzle2.size);
+    const col = index % puzzle2.size;
+    return puzzle2.solution[row] === col;
+  }
+  function transactionKind(change) {
+    if (change.before === "empty" && change.after === "excluded") {
+      return "exclude";
+    }
+    if (change.before === "excluded" && change.after === "empty") {
+      return "clear-excluded";
+    }
+    if (change.before === "empty" && change.after === "dog") {
+      return "place-dog";
+    }
+    if (change.before === "dog" && change.after === "empty") {
+      return "remove-dog";
+    }
+    return null;
+  }
+  function transactionIsCompatible(puzzle2, marks, transaction) {
+    const seen = /* @__PURE__ */ new Set();
+    let expectedKind = null;
+    for (const change of transaction.changes) {
+      const kind = transactionKind(change);
+      if (!Number.isInteger(change.index) || change.index < 0 || change.index >= marks.length || seen.has(change.index) || kind === null || expectedKind !== null && expectedKind !== kind || marks[change.index] !== change.after || change.before === "dog" && !isCorrectDog(puzzle2, change.index) || change.after === "dog" && !isCorrectDog(puzzle2, change.index)) {
+        return false;
+      }
+      expectedKind = kind;
+      seen.add(change.index);
+    }
+    if (transaction.changes.length === 0 || expectedKind === null) {
+      return false;
+    }
+    return expectedKind === "exclude" || expectedKind === "clear-excluded" || transaction.changes.length === 1;
+  }
+  function restoreGameSession(puzzle2, snapshot, nowMs) {
+    let initial;
+    try {
+      initial = createGameSession(puzzle2);
+    } catch {
+      return null;
+    }
+    if (snapshot.puzzleId !== puzzle2.id || snapshot.marks.length !== initial.marks.length || snapshot.treatsRemaining < 0 || snapshot.treatsRemaining > INITIAL_TREATS || !Number.isInteger(snapshot.treatsRemaining) || snapshot.elapsedMs < 0 || !Number.isFinite(snapshot.elapsedMs) || !snapshot.started && snapshot.elapsedMs !== 0 || !snapshot.started && snapshot.undo !== null) {
+      return null;
+    }
+    for (const [index, mark] of snapshot.marks.entries()) {
+      if (!isCellMark2(mark) || mark === "dog" && !isCorrectDog(puzzle2, index)) {
+        return null;
+      }
+    }
+    if (!snapshot.started && snapshot.marks.some((mark) => mark !== "empty")) {
+      return null;
+    }
+    const solution = puzzle2.solution;
+    if (solution !== void 0 && solution.every((col, row) => snapshot.marks[row * puzzle2.size + col] === "dog")) {
+      return null;
+    }
+    if (snapshot.undo !== null && !transactionIsCompatible(puzzle2, snapshot.marks, snapshot.undo)) {
+      return null;
+    }
+    return {
+      ...initial,
+      marks: [...snapshot.marks],
+      treatsRemaining: snapshot.treatsRemaining,
+      history: snapshot.undo === null ? [] : [cloneTransaction(snapshot.undo)],
+      timer: snapshot.started ? { status: "running", elapsedMs: snapshot.elapsedMs, runningSinceMs: nowMs } : initial.timer
+    };
+  }
+
+  // src/solver/logical-state.ts
+  function getRegionIds(puzzle2) {
+    return [...new Set(puzzle2.regions)].sort((a, b) => a - b);
+  }
+  function createLogicalState(puzzle2, seed = {}) {
+    const cellCount = puzzle2.size * puzzle2.size;
+    const state = {
+      size: puzzle2.size,
+      candidates: Array.from({ length: cellCount }, () => true),
+      dogs: Array.from({ length: cellCount }, () => false)
+    };
+    for (const cell of seed.excluded ?? []) {
+      const index = checkedIndex(puzzle2, cell);
+      state.candidates[index] = false;
+    }
+    for (const cell of seed.dogs ?? []) {
+      const index = checkedIndex(puzzle2, cell);
+      if (!state.candidates[index]) {
+        throw new Error(`Dog seed cannot be excluded: ${cell.row},${cell.col}`);
+      }
+      state.dogs[index] = true;
+    }
+    return state;
+  }
+  function isCandidate(puzzle2, state, cell) {
+    return state.candidates[checkedIndex(puzzle2, cell)] ?? false;
+  }
+  function isDog(puzzle2, state, cell) {
+    return state.dogs[checkedIndex(puzzle2, cell)] ?? false;
+  }
+  function getCandidateCells(puzzle2, state) {
+    const cells = [];
+    for (let index = 0; index < state.candidates.length; index += 1) {
+      if (state.candidates[index] && !state.dogs[index]) {
+        cells.push(indexToCell(puzzle2.size, index));
+      }
+    }
+    return cells;
+  }
+  function getDogCells(puzzle2, state) {
+    const cells = [];
+    for (let index = 0; index < state.dogs.length; index += 1) {
+      if (state.dogs[index]) {
+        cells.push(indexToCell(puzzle2.size, index));
+      }
+    }
+    return cells;
+  }
+  function getUnitCells(puzzle2, type, id) {
+    const cells = [];
+    for (let row = 0; row < puzzle2.size; row += 1) {
+      for (let col = 0; col < puzzle2.size; col += 1) {
+        const cell = { row, col };
+        if (type === "row" && row === id || type === "column" && col === id || type === "region" && puzzle2.regions[cellToIndex(puzzle2.size, cell)] === id) {
+          cells.push(cell);
+        }
+      }
+    }
+    return cells;
+  }
+  function getUnitCandidates(puzzle2, state, type, id) {
+    return getUnitCells(puzzle2, type, id).filter(
+      (cell) => isCandidate(puzzle2, state, cell) && !isDog(puzzle2, state, cell)
+    );
+  }
+  function getUnitDogs(puzzle2, state, type, id) {
+    return getUnitCells(puzzle2, type, id).filter((cell) => isDog(puzzle2, state, cell));
+  }
+  function checkedIndex(puzzle2, cell) {
+    if (!Number.isInteger(cell.row) || !Number.isInteger(cell.col) || cell.row < 0 || cell.row >= puzzle2.size || cell.col < 0 || cell.col >= puzzle2.size) {
+      throw new Error(`Cell is outside puzzle bounds: ${cell.row},${cell.col}`);
+    }
+    return cellToIndex(puzzle2.size, cell);
+  }
+
+  // src/solver/logical-rules.ts
+  function sameCell(a, b) {
+    return a.row === b.row && a.col === b.col;
+  }
+  function conflictsWithDog(puzzle2, dog, candidate) {
+    return dog.row === candidate.row || dog.col === candidate.col || getRegionId(puzzle2, dog) === getRegionId(puzzle2, candidate) || areCellsAdjacent(dog, candidate);
+  }
+  function singleDeduction(rule, unit, remaining) {
+    return {
+      rule,
+      action: "place-dog",
+      targets: [remaining],
+      premises: [],
+      units: [unit],
+      explanation: {
+        kind: "single",
+        unit,
+        candidateCountBefore: 1,
+        remaining
+      }
+    };
+  }
+  function lockDeduction(rule, sourceUnit, lockedTo, candidateCountBefore, targets) {
+    return {
+      rule,
+      action: "exclude",
+      targets,
+      premises: [],
+      units: [sourceUnit, lockedTo],
+      explanation: {
+        kind: "unit-lock",
+        sourceUnit,
+        lockedTo,
+        candidateCountBefore
+      }
+    };
+  }
+  function findDogElimination(puzzle2, state) {
+    const candidates = getCandidateCells(puzzle2, state);
+    for (const dog of getDogCells(puzzle2, state)) {
+      const targets = candidates.filter(
+        (candidate) => !sameCell(dog, candidate) && conflictsWithDog(puzzle2, dog, candidate)
+      );
+      if (targets.length === 0) {
+        continue;
+      }
+      const regionId = getRegionId(puzzle2, dog);
+      return {
+        rule: "DOG_ELIMINATION",
+        action: "exclude",
+        targets,
+        premises: [dog],
+        units: [
+          { type: "row", id: dog.row },
+          { type: "column", id: dog.col },
+          ...regionId === void 0 ? [] : [{ type: "region", id: regionId }]
+        ],
+        explanation: {
+          kind: "dog-elimination",
+          dog
+        }
+      };
+    }
+    return null;
+  }
+  function findRegionSingle(puzzle2, state) {
+    for (const regionId of getRegionIds(puzzle2)) {
+      if (getUnitDogs(puzzle2, state, "region", regionId).length > 0) {
+        continue;
+      }
+      const candidates = getUnitCandidates(puzzle2, state, "region", regionId);
+      if (candidates.length === 1) {
+        const unit = { type: "region", id: regionId };
+        return singleDeduction("REGION_SINGLE", unit, candidates[0]);
+      }
+    }
+    return null;
+  }
+  function findRowSingle(puzzle2, state) {
+    for (let row = 0; row < puzzle2.size; row += 1) {
+      if (getUnitDogs(puzzle2, state, "row", row).length > 0) {
+        continue;
+      }
+      const candidates = getUnitCandidates(puzzle2, state, "row", row);
+      if (candidates.length === 1) {
+        const unit = { type: "row", id: row };
+        return singleDeduction("ROW_SINGLE", unit, candidates[0]);
+      }
+    }
+    return null;
+  }
+  function findColumnSingle(puzzle2, state) {
+    for (let col = 0; col < puzzle2.size; col += 1) {
+      if (getUnitDogs(puzzle2, state, "column", col).length > 0) {
+        continue;
+      }
+      const candidates = getUnitCandidates(puzzle2, state, "column", col);
+      if (candidates.length === 1) {
+        const unit = { type: "column", id: col };
+        return singleDeduction("COLUMN_SINGLE", unit, candidates[0]);
+      }
+    }
+    return null;
+  }
+  function findRegionLineLock(puzzle2, state) {
+    const allCandidates = getCandidateCells(puzzle2, state);
+    for (const regionId of getRegionIds(puzzle2)) {
+      if (getUnitDogs(puzzle2, state, "region", regionId).length > 0) {
+        continue;
+      }
+      const candidates = getUnitCandidates(puzzle2, state, "region", regionId);
+      if (candidates.length <= 1) {
+        continue;
+      }
+      const rows = new Set(candidates.map((cell) => cell.row));
+      if (rows.size === 1) {
+        const row = candidates[0].row;
+        const targets = allCandidates.filter(
+          (cell) => cell.row === row && getRegionId(puzzle2, cell) !== regionId
+        );
+        if (targets.length > 0) {
+          return lockDeduction(
+            "REGION_LINE_LOCK",
+            { type: "region", id: regionId },
+            { type: "row", id: row },
+            candidates.length,
+            targets
+          );
+        }
+      }
+      const columns = new Set(candidates.map((cell) => cell.col));
+      if (columns.size === 1) {
+        const col = candidates[0].col;
+        const targets = allCandidates.filter(
+          (cell) => cell.col === col && getRegionId(puzzle2, cell) !== regionId
+        );
+        if (targets.length > 0) {
+          return lockDeduction(
+            "REGION_LINE_LOCK",
+            { type: "region", id: regionId },
+            { type: "column", id: col },
+            candidates.length,
+            targets
+          );
+        }
+      }
+    }
+    return null;
+  }
+  function findLineRegionLock(puzzle2, state) {
+    for (let row = 0; row < puzzle2.size; row += 1) {
+      if (getUnitDogs(puzzle2, state, "row", row).length > 0) {
+        continue;
+      }
+      const candidates = getUnitCandidates(puzzle2, state, "row", row);
+      if (candidates.length <= 1) {
+        continue;
+      }
+      const regions = new Set(candidates.map((cell) => getRegionId(puzzle2, cell)));
+      if (regions.size === 1) {
+        const regionId = getRegionId(puzzle2, candidates[0]);
+        if (regionId !== void 0) {
+          const targets = getUnitCandidates(puzzle2, state, "region", regionId).filter(
+            (cell) => cell.row !== row
+          );
+          if (targets.length > 0) {
+            return lockDeduction(
+              "LINE_REGION_LOCK",
+              { type: "row", id: row },
+              { type: "region", id: regionId },
+              candidates.length,
+              targets
+            );
+          }
+        }
+      }
+    }
+    for (let col = 0; col < puzzle2.size; col += 1) {
+      if (getUnitDogs(puzzle2, state, "column", col).length > 0) {
+        continue;
+      }
+      const candidates = getUnitCandidates(puzzle2, state, "column", col);
+      if (candidates.length <= 1) {
+        continue;
+      }
+      const regions = new Set(candidates.map((cell) => getRegionId(puzzle2, cell)));
+      if (regions.size === 1) {
+        const regionId = getRegionId(puzzle2, candidates[0]);
+        if (regionId !== void 0) {
+          const targets = getUnitCandidates(puzzle2, state, "region", regionId).filter(
+            (cell) => cell.col !== col
+          );
+          if (targets.length > 0) {
+            return lockDeduction(
+              "LINE_REGION_LOCK",
+              { type: "column", id: col },
+              { type: "region", id: regionId },
+              candidates.length,
+              targets
+            );
+          }
+        }
+      }
+    }
+    return null;
+  }
+  function findNextDeduction(puzzle2, state) {
+    return findDogElimination(puzzle2, state) ?? findRegionSingle(puzzle2, state) ?? findRowSingle(puzzle2, state) ?? findColumnSingle(puzzle2, state) ?? findRegionLineLock(puzzle2, state) ?? findLineRegionLock(puzzle2, state);
+  }
+
+  // src/ui/hints.ts
+  function createIdleHintState() {
+    return { kind: "idle" };
+  }
+  function uniqueCells(cells) {
+    const seen = /* @__PURE__ */ new Set();
+    const unique = [];
+    for (const cell of cells) {
+      const key = `${cell.row},${cell.col}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(cell);
+      }
+    }
+    return unique;
+  }
+  function markAt(puzzle2, marks, cell) {
+    return marks[cellToIndex(puzzle2.size, cell)];
+  }
+  function conflictCandidate(puzzle2, marks) {
+    if (!puzzle2.solution) {
+      return null;
+    }
+    for (let row = 0; row < puzzle2.size; row += 1) {
+      const cell = { row, col: puzzle2.solution[row] };
+      if (markAt(puzzle2, marks, cell) === "excluded") {
+        return {
+          kind: "conflict",
+          id: `conflict:${cell.row},${cell.col}`,
+          cell
+        };
+      }
+    }
+    return null;
+  }
+  function deductionCandidate(puzzle2, marks) {
+    const dogs = [];
+    const excluded = [];
+    for (let index = 0; index < marks.length; index += 1) {
+      const mark = marks[index];
+      if (mark === "empty") {
+        continue;
+      }
+      const cell = indexToCell(puzzle2.size, index);
+      if (mark === "dog") {
+        dogs.push(cell);
+      } else if (mark === "excluded") {
+        excluded.push(cell);
+      }
+    }
+    const deduction = findNextDeduction(puzzle2, createLogicalState(puzzle2, { dogs, excluded }));
+    if (deduction === null) {
+      return null;
+    }
+    const targets = deduction.targets.filter((target) => {
+      const mark = markAt(puzzle2, marks, target);
+      return deduction.action === "place-dog" ? mark !== "dog" : mark === "empty";
+    });
+    if (targets.length === 0) {
+      return null;
+    }
+    return {
+      kind: "deduction",
+      id: `${deduction.rule}:${deduction.action}:${targets.map((cell) => `${cell.row},${cell.col}`).join("|")}`,
+      deduction,
+      targets
+    };
+  }
+  function findHintCandidate(puzzle2, marks) {
+    return conflictCandidate(puzzle2, marks) ?? deductionCandidate(puzzle2, marks);
+  }
+  function advanceHintState(current, puzzle2, marks) {
+    const candidate = findHintCandidate(puzzle2, marks);
+    if (candidate === null) {
+      return createIdleHintState();
+    }
+    if (current.kind === "idle" || current.traceId !== candidate.id) {
+      return { kind: "attention", traceId: candidate.id, candidate };
+    }
+    if (current.kind === "attention") {
+      return { kind: "reason", traceId: candidate.id, candidate };
+    }
+    if (current.kind === "reason") {
+      return { kind: "deduction", traceId: candidate.id, candidate };
+    }
+    return createIdleHintState();
+  }
+  function unitCells(puzzle2, unit) {
+    const cells = [];
+    for (let index = 0; index < puzzle2.size * puzzle2.size; index += 1) {
+      const cell = indexToCell(puzzle2.size, index);
+      if (unit.type === "row" && cell.row === unit.id || unit.type === "column" && cell.col === unit.id || unit.type === "region" && puzzle2.regions[index] === unit.id) {
+        cells.push(cell);
+      }
+    }
+    return cells;
+  }
+  function unitLabel(unit) {
+    switch (unit.type) {
+      case "row":
+        return `${unit.id + 1}\u884C\u76EE`;
+      case "column":
+        return `${unit.id + 1}\u5217\u76EE`;
+      case "region":
+        return "\u30CF\u30A4\u30E9\u30A4\u30C8\u3057\u305F\u8272\u30A8\u30EA\u30A2";
+    }
+  }
+  function attentionText(deduction) {
+    const unit = deduction.units[0];
+    if (unit) {
+      return `${unitLabel(unit)}\u306B\u6CE8\u76EE\u3057\u3066\u307F\u307E\u3057\u3087\u3046\u3002`;
+    }
+    if (deduction.premises.length > 0) {
+      return "\u30CF\u30A4\u30E9\u30A4\u30C8\u3057\u305F\u72AC\u3084\u5019\u88DC\u306B\u6CE8\u76EE\u3057\u3066\u307F\u307E\u3057\u3087\u3046\u3002";
+    }
+    return "\u30CF\u30A4\u30E9\u30A4\u30C8\u3057\u305F\u5834\u6240\u306B\u6CE8\u76EE\u3057\u3066\u307F\u307E\u3057\u3087\u3046\u3002";
+  }
+  function reasonText(explanation) {
+    switch (explanation.kind) {
+      case "dog-elimination":
+        return "\u7F6E\u304B\u308C\u305F\u72AC\u3068\u540C\u3058\u884C\u30FB\u5217\u3001\u305D\u3057\u3066\u5468\u56F28\u30DE\u30B9\uFF08\u659C\u3081\u3092\u542B\u3080\uFF09\u306B\u306F\u5225\u306E\u72AC\u3092\u7F6E\u3051\u307E\u305B\u3093\u3002";
+      case "single":
+        return `${unitLabel(explanation.unit)}\u3067\u72AC\u3092\u7F6E\u3051\u308B\u5019\u88DC\u304C1\u30DE\u30B9\u3060\u3051\u6B8B\u3063\u3066\u3044\u307E\u3059\u3002`;
+      case "unit-lock":
+        return `${unitLabel(explanation.sourceUnit)}\u306E\u5019\u88DC\u304C${unitLabel(explanation.lockedTo)}\u306B\u96C6\u307E\u3063\u3066\u3044\u308B\u305F\u3081\u3001\u5916\u5074\u306E\u5019\u88DC\u3092\u9664\u5916\u3067\u304D\u307E\u3059\u3002`;
+    }
+  }
+  function deductionText(candidate) {
+    return candidate.deduction.action === "place-dog" ? "\u7DD1\u3067\u793A\u3057\u305F\u30DE\u30B9\u306B\u72AC\u3092\u7F6E\u3051\u307E\u3059\u3002\u6700\u5F8C\u306E\u64CD\u4F5C\u306F\u81EA\u5206\u3067\u884C\u3063\u3066\u307F\u307E\u3057\u3087\u3046\u3002" : "\u7DD1\u3067\u793A\u3057\u305F\u30DE\u30B9\u306B\u306F\u72AC\u3092\u7F6E\u3051\u306A\u3044\u306E\u3067\u3001\xD7\u3092\u4ED8\u3051\u3089\u308C\u307E\u3059\u3002\u6700\u5F8C\u306E\u64CD\u4F5C\u306F\u81EA\u5206\u3067\u884C\u3063\u3066\u307F\u307E\u3057\u3087\u3046\u3002";
+  }
+  function candidateUnitCells(puzzle2, deduction) {
+    const unit = deduction.units[0];
+    return unit ? unitCells(puzzle2, unit) : [];
+  }
+  function getHintPresentation(puzzle2, state) {
+    if (state.kind === "idle") {
+      return null;
+    }
+    if (state.candidate.kind === "conflict") {
+      const cell = state.candidate.cell;
+      if (state.kind === "attention") {
+        return {
+          title: "Hint 1 / 3 \u2014 \u898B\u308B\u5834\u6240",
+          text: "\u3053\u306E\xD7\u304C\u4ED8\u3044\u3066\u3044\u308B\u30DE\u30B9\u306B\u6CE8\u76EE\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
+          attentionCells: [cell],
+          relatedCells: [],
+          targetCells: []
+        };
+      }
+      if (state.kind === "reason") {
+        return {
+          title: "Hint 2 / 3 \u2014 \u7406\u7531",
+          text: "\u3053\u306E\u30DE\u30B9\u306F\u6B63\u89E3\u3067\u306F\u72AC\u304C\u5165\u308B\u5834\u6240\u3067\u3059\u3002\u3053\u306E\xD7\u304C\u3042\u308B\u3068\u3001\u305D\u306E\u5148\u306E\u8AD6\u7406\u3092\u9032\u3081\u3089\u308C\u307E\u305B\u3093\u3002",
+          attentionCells: [],
+          relatedCells: [cell],
+          targetCells: []
+        };
+      }
+      return {
+        title: "Hint 3 / 3 \u2014 \u7D50\u8AD6",
+        text: "\u7DD1\u3067\u793A\u3057\u305F\u30DE\u30B9\u306E\xD7\u3092\u5916\u3057\u3066\u304B\u3089\u3001\u3082\u3046\u4E00\u5EA6\u76E4\u9762\u3092\u898B\u3066\u307F\u307E\u3057\u3087\u3046\u3002",
+        attentionCells: [],
+        relatedCells: [],
+        targetCells: [cell]
+      };
+    }
+    const { deduction, targets } = state.candidate;
+    const units = candidateUnitCells(puzzle2, deduction);
+    if (state.kind === "attention") {
+      return {
+        title: "Hint 1 / 3 \u2014 \u898B\u308B\u5834\u6240",
+        text: attentionText(deduction),
+        attentionCells: uniqueCells(units.length > 0 ? units : [...deduction.premises, ...targets]),
+        relatedCells: [],
+        targetCells: []
+      };
+    }
+    if (state.kind === "reason") {
+      return {
+        title: "Hint 2 / 3 \u2014 \u7406\u7531",
+        text: reasonText(deduction.explanation),
+        attentionCells: [],
+        relatedCells: uniqueCells([...deduction.premises, ...units]),
+        targetCells: []
+      };
+    }
+    return {
+      title: "Hint 3 / 3 \u2014 \u7D50\u8AD6",
+      text: deductionText(state.candidate),
+      attentionCells: [],
+      relatedCells: [],
+      targetCells: uniqueCells(targets)
+    };
+  }
+
+  // src/ui/input.ts
+  var DOUBLE_CLICK_WINDOW_MS = 300;
+  function cellKey(cell) {
+    return `${cell.row},${cell.col}`;
+  }
+  function sameCell2(a, b) {
+    return a.row === b.row && a.col === b.col;
+  }
+  function cellFromElement(board, target) {
+    const cellElement = target?.closest("[data-cell]");
+    if (!cellElement || !board.contains(cellElement)) {
+      return null;
+    }
+    const row = Number(cellElement.dataset.row);
+    const col = Number(cellElement.dataset.col);
+    if (!Number.isInteger(row) || !Number.isInteger(col)) {
+      return null;
+    }
+    return { row, col };
+  }
+  function cellFromPoint(board, clientX, clientY) {
+    return cellFromElement(board, document.elementFromPoint(clientX, clientY));
+  }
+  function createTouchModeControls(board) {
+    const controls = document.createElement("section");
+    controls.className = "mobile-input-mode";
+    controls.dataset.testid = "mobile-input-mode";
+    controls.setAttribute("aria-label", "\u30B9\u30DE\u30DB\u5165\u529B\u30E2\u30FC\u30C9");
+    const label = document.createElement("span");
+    label.className = "mobile-input-label";
+    label.textContent = "\u5165\u529B";
+    const markButton = document.createElement("button");
+    markButton.type = "button";
+    markButton.className = "mobile-input-button";
+    markButton.dataset.testid = "mobile-mode-mark";
+    markButton.textContent = "\xD7";
+    const dogButton = document.createElement("button");
+    dogButton.type = "button";
+    dogButton.className = "mobile-input-button";
+    dogButton.dataset.testid = "mobile-mode-dog";
+    dogButton.textContent = "\u72AC";
+    let mode = "mark";
+    const setMode = (next) => {
+      mode = next;
+      markButton.setAttribute("aria-pressed", String(next === "mark"));
+      dogButton.setAttribute("aria-pressed", String(next === "dog"));
+      controls.dataset.mode = next;
+    };
+    markButton.addEventListener("click", () => setMode("mark"));
+    dogButton.addEventListener("click", () => setMode("dog"));
+    controls.append(label, markButton, dogButton);
+    board.after(controls);
+    setMode("mark");
+    return {
+      element: controls,
+      setMode,
+      getMode: () => mode
+    };
+  }
+  function bindBoardPointerInteractions(board, callbacks) {
+    let gesture = null;
+    let pendingSingle = null;
+    let suppressNextClick = false;
+    const touchControls = createTouchModeControls(board);
+    const cancelPendingSingle = () => {
+      if (pendingSingle !== null) {
+        window.clearTimeout(pendingSingle.timerId);
+        pendingSingle = null;
+      }
+    };
+    const scheduleSingle = (cell) => {
+      if (pendingSingle !== null) {
+        const previous = pendingSingle.cell;
+        cancelPendingSingle();
+        callbacks.onSingleClick(previous);
+      }
+      const initialMark = callbacks.getMark(cell);
+      const timerId = window.setTimeout(() => {
+        pendingSingle = null;
+        callbacks.onSingleClick(cell);
+      }, DOUBLE_CLICK_WINDOW_MS);
+      pendingSingle = { timerId, cell, initialMark };
+    };
+    const onPointerDown = (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+      const cell = cellFromElement(board, event.target);
+      if (cell === null) {
+        return;
+      }
+      const visited = /* @__PURE__ */ new Map();
+      visited.set(cellKey(cell), cell);
+      gesture = {
+        startCell: cell,
+        startMark: callbacks.getMark(cell),
+        visited,
+        moved: false,
+        pointerType: event.pointerType
+      };
+    };
+    const onPointerMove = (event) => {
+      if (gesture === null || event.pointerType === "mouse" && (event.buttons & 1) === 0) {
+        return;
+      }
+      const cell = cellFromPoint(board, event.clientX, event.clientY);
+      if (cell === null) {
+        return;
+      }
+      if (!sameCell2(cell, gesture.startCell)) {
+        gesture.moved = true;
+      }
+      gesture.visited.set(cellKey(cell), cell);
+    };
+    const finishGesture = (allowDrag) => {
+      if (gesture === null) {
+        return;
+      }
+      if (gesture.moved) {
+        suppressNextClick = true;
+        cancelPendingSingle();
+        if (allowDrag && gesture.startMark !== "dog") {
+          callbacks.onDrag(
+            [...gesture.visited.values()],
+            gesture.startMark === "excluded" ? "erase" : "mark"
+          );
+        }
+      }
+      gesture = null;
+    };
+    const applyTouchTap = (cell) => {
+      const mark = callbacks.getMark(cell);
+      if (touchControls.getMode() === "mark") {
+        callbacks.onSingleClick(cell);
+        return;
+      }
+      if (mark === "dog") {
+        callbacks.onSingleClick(cell);
+      } else if (mark === "empty") {
+        callbacks.onDoubleClick(cell);
+      }
+    };
+    const onPointerUp = (event) => {
+      if (event.button !== 0 || gesture === null) {
+        return;
+      }
+      if (gesture.pointerType !== "mouse") {
+        const completedGesture = gesture;
+        suppressNextClick = true;
+        if (completedGesture.moved) {
+          finishGesture(touchControls.getMode() === "mark");
+        } else {
+          gesture = null;
+          cancelPendingSingle();
+          applyTouchTap(completedGesture.startCell);
+        }
+        return;
+      }
+      finishGesture(true);
+    };
+    const onPointerCancel = () => {
+      gesture = null;
+    };
+    const onClick = (event) => {
+      if (suppressNextClick) {
+        suppressNextClick = false;
+        return;
+      }
+      if (event.button !== 0 || event.detail !== 1) {
+        return;
+      }
+      const cell = cellFromElement(board, event.target);
+      if (cell !== null) {
+        scheduleSingle(cell);
+      }
+    };
+    const onDoubleClick = (event) => {
+      const cell = cellFromElement(board, event.target);
+      if (cell === null) {
+        return;
+      }
+      const pending = pendingSingle;
+      if (pending === null || !sameCell2(pending.cell, cell)) {
+        return;
+      }
+      cancelPendingSingle();
+      if (pending.initialMark === "empty" && callbacks.getMark(cell) === "empty") {
+        callbacks.onDoubleClick(cell);
+      }
+    };
+    const onContextMenu = (event) => {
+      const cell = cellFromElement(board, event.target);
+      if (cell === null) {
+        return;
+      }
+      event.preventDefault();
+      if (pendingSingle !== null && sameCell2(pendingSingle.cell, cell)) {
+        cancelPendingSingle();
+      }
+      if (callbacks.getMark(cell) === "empty") {
+        callbacks.onRightClick(cell);
+      }
+    };
+    board.addEventListener("pointerdown", onPointerDown);
+    board.addEventListener("pointermove", onPointerMove);
+    board.addEventListener("pointerup", onPointerUp);
+    board.addEventListener("pointercancel", onPointerCancel);
+    board.addEventListener("click", onClick);
+    board.addEventListener("dblclick", onDoubleClick);
+    board.addEventListener("contextmenu", onContextMenu);
+    return () => {
+      cancelPendingSingle();
+      touchControls.element.remove();
+      board.removeEventListener("pointerdown", onPointerDown);
+      board.removeEventListener("pointermove", onPointerMove);
+      board.removeEventListener("pointerup", onPointerUp);
+      board.removeEventListener("pointercancel", onPointerCancel);
+      board.removeEventListener("click", onClick);
+      board.removeEventListener("dblclick", onDoubleClick);
+      board.removeEventListener("contextmenu", onContextMenu);
+    };
+  }
+
+  // src/ui/board-model.ts
+  function regionAt(puzzle2, row, col) {
+    if (row < 0 || row >= puzzle2.size || col < 0 || col >= puzzle2.size) {
+      return void 0;
+    }
+    return puzzle2.regions[row * puzzle2.size + col];
+  }
+  function createBoardCellModels(puzzle2, marks) {
+    const expectedLength = puzzle2.size * puzzle2.size;
+    if (puzzle2.regions.length !== expectedLength || marks.length !== expectedLength) {
+      throw new Error("Board render model requires puzzle regions and marks to match puzzle size.");
+    }
+    return marks.map((mark, index) => {
+      const cell = {
+        row: Math.floor(index / puzzle2.size),
+        col: index % puzzle2.size
+      };
+      const regionId = puzzle2.regions[index];
+      return {
+        cell,
+        index: cellToIndex(puzzle2.size, cell),
+        regionId,
+        mark,
+        regionEdges: {
+          top: regionAt(puzzle2, cell.row - 1, cell.col) !== regionId,
+          right: regionAt(puzzle2, cell.row, cell.col + 1) !== regionId,
+          bottom: regionAt(puzzle2, cell.row + 1, cell.col) !== regionId,
+          left: regionAt(puzzle2, cell.row, cell.col - 1) !== regionId
+        }
+      };
+    });
+  }
+
+  // src/ui/render.ts
+  var DOG_SVG = `
+<svg class="cell-dog" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+  <path d="M18 22C12 17 10 10 12 5c8 2 13 6 16 12" fill="#a96532" stroke="#3c3027" stroke-width="2" stroke-linejoin="round" />
+  <path d="M46 22c6-5 8-12 6-17-8 2-13 6-16 12" fill="#d8c5a9" stroke="#3c3027" stroke-width="2" stroke-linejoin="round" />
+  <path d="M15 31c0-12 7-20 17-20s17 8 17 20c0 15-8 25-17 25S15 46 15 31Z" fill="#fffdf7" stroke="#3c3027" stroke-width="2.2" />
+  <path d="M17 25c2-8 7-12 14-13-1 8-4 15-11 21Z" fill="#b8733b" opacity=".96" />
+  <path d="M35 13c8 2 12 8 13 16-5-1-10-5-14-11Z" fill="#efe2cf" />
+  <circle cx="25" cy="31" r="2.3" fill="#28221d" />
+  <circle cx="40" cy="31" r="2.3" fill="#28221d" />
+  <path d="M28 39c2-2 6-2 8 0-1 4-7 4-8 0Z" fill="#2f2924" />
+  <path d="M32 43c-2 4-7 5-10 2m10-2c2 4 7 5 10 2" fill="none" stroke="#5a4638" stroke-width="2" stroke-linecap="round" />
+</svg>`;
+  function element(tag, className) {
+    const node = document.createElement(tag);
+    if (className) {
+      node.className = className;
+    }
+    return node;
+  }
+  function stat(label, testId) {
+    const wrapper = element("div", "status-item");
+    const name = element("span", "status-label");
+    const value = element("strong", "status-value");
+    name.textContent = label;
+    value.dataset.testid = testId;
+    wrapper.append(name, value);
+    return [wrapper, value];
+  }
+  function settingRow(title, description, testId) {
+    const row = element("label", "setting-row");
+    const copy = element("span", "setting-copy");
+    const heading = element("strong");
+    const detail = element("small");
+    const input = element("input");
+    input.type = "checkbox";
+    input.dataset.testid = testId;
+    heading.textContent = title;
+    detail.textContent = description;
+    copy.append(heading, detail);
+    row.append(copy, input);
+    return [row, input];
+  }
+  function formatElapsed(milliseconds) {
+    const totalSeconds = Math.floor(milliseconds / 1e3);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+  function markLabel(mark) {
+    switch (mark) {
+      case "dog":
+        return "\u72AC";
+      case "excluded":
+        return "\xD7";
+      case "empty":
+        return "\u7A7A\u304D";
+    }
+  }
+  function renderCellMark(cell, mark) {
+    cell.dataset.mark = mark;
+    cell.replaceChildren();
+    if (mark === "excluded") {
+      const cross = element("span", "cell-x");
+      cross.textContent = "\xD7";
+      cross.setAttribute("aria-hidden", "true");
+      cell.append(cross);
+    } else if (mark === "dog") {
+      cell.innerHTML = DOG_SVG;
+    }
+  }
+  function createGameView(root2, puzzle2, buildStatus, levelNumber) {
+    const shell = element("div", "game-shell");
+    const header = element("header", "game-header");
+    const headerRow = element("div", "header-row");
+    const levelsButton = element("button", "header-button");
+    levelsButton.type = "button";
+    levelsButton.dataset.testid = "levels";
+    levelsButton.textContent = "Levels";
+    const heading = element("h1");
+    heading.textContent = "Jackdoku";
+    const settingsButton = element("button", "header-button header-button-right");
+    settingsButton.type = "button";
+    settingsButton.dataset.testid = "settings";
+    settingsButton.textContent = "Settings";
+    headerRow.append(levelsButton, heading, settingsButton);
+    const subtitle = element("p", "game-subtitle");
+    subtitle.textContent = "1\u884C\u30FB1\u5217\u30FB1\u30A8\u30EA\u30A2\u306B1\u5339\u3002\u72AC\u3069\u3046\u3057\u306F\u96A3\u308A\u5408\u3044\u307E\u305B\u3093\u3002";
+    header.append(headerRow, subtitle);
+    const statusBar = element("section", "status-bar");
+    statusBar.setAttribute("aria-label", "\u30B2\u30FC\u30E0\u72B6\u6CC1");
+    const [levelStat, levelValue] = stat("Level", "level");
+    levelValue.textContent = String(levelNumber);
+    const [dogStat, dogCountValue] = stat("Dogs", "dog-count");
+    const [treatStat, treatsValue] = stat("Treats", "treats");
+    const [timerStat, timerValue] = stat("Time", "timer");
+    statusBar.append(levelStat, dogStat, treatStat, timerStat);
+    const tutorialPanel = element("section", "tutorial-panel");
+    tutorialPanel.dataset.testid = "tutorial";
+    tutorialPanel.hidden = true;
+    const tutorialTitle = element("strong", "tutorial-title");
+    const tutorialText = element("p", "tutorial-text");
+    tutorialPanel.append(tutorialTitle, tutorialText);
+    const playArea = element("section", "play-area");
+    const board = element("div", "board");
+    board.dataset.testid = "board";
+    board.setAttribute("role", "grid");
+    board.setAttribute("aria-label", "Jackdoku\u76E4\u9762");
+    board.style.setProperty("--board-size", String(puzzle2.size));
+    const emptyMarks = Array.from({ length: puzzle2.size * puzzle2.size }, () => "empty");
+    const cells = createBoardCellModels(puzzle2, emptyMarks).map((model) => {
+      const cell = element("button", "board-cell");
+      cell.type = "button";
+      cell.dataset.cell = `${model.cell.row},${model.cell.col}`;
+      cell.dataset.row = String(model.cell.row);
+      cell.dataset.col = String(model.cell.col);
+      cell.dataset.region = String(model.regionId);
+      cell.dataset.mark = model.mark;
+      cell.classList.toggle("region-top", model.regionEdges.top);
+      cell.classList.toggle("region-right", model.regionEdges.right);
+      cell.classList.toggle("region-bottom", model.regionEdges.bottom);
+      cell.classList.toggle("region-left", model.regionEdges.left);
+      cell.classList.add(`region-tone-${model.regionId % 6}`);
+      cell.setAttribute("role", "gridcell");
+      cell.setAttribute("aria-label", `\u884C${model.cell.row + 1} \u5217${model.cell.col + 1}: \u7A7A\u304D`);
+      board.append(cell);
+      return cell;
+    });
+    const panel = element("aside", "action-panel");
+    const panelTitle = element("h2");
+    panelTitle.textContent = "Actions";
+    const hintButton = element("button", "action-button");
+    hintButton.type = "button";
+    hintButton.dataset.testid = "hint";
+    hintButton.textContent = "Hint (H)";
+    const undoButton = element("button", "action-button action-button-secondary");
+    undoButton.type = "button";
+    undoButton.dataset.testid = "undo";
+    undoButton.textContent = "Undo";
+    const restartButton = element("button", "action-button action-button-secondary");
+    restartButton.type = "button";
+    restartButton.dataset.testid = "restart";
+    restartButton.textContent = "Restart";
+    const hintBox = element("section", "hint-box");
+    hintBox.setAttribute("aria-live", "polite");
+    const hintTitle = element("strong", "hint-title");
+    hintTitle.dataset.testid = "hint-title";
+    hintTitle.textContent = "Hint";
+    const hintText = element("p", "hint-text");
+    hintText.dataset.testid = "hint-text";
+    hintText.textContent = "\u898B\u308B\u5834\u6240\u304B\u3089\u9806\u306B\u30013\u6BB5\u968E\u3067\u30D2\u30F3\u30C8\u3092\u8868\u793A\u3057\u307E\u3059\u3002";
+    hintBox.append(hintTitle, hintText);
+    const help = element("p", "input-help");
+    help.textContent = "\u5DE6\u30AF\u30EA\u30C3\u30AF: \xD7 / \u30C0\u30D6\u30EB\u30AF\u30EA\u30C3\u30AF\u30FB\u53F3\u30AF\u30EA\u30C3\u30AF: \u72AC / \u30C9\u30E9\u30C3\u30B0: \u307E\u3068\u3081\u3066\xD7";
+    const feedback = element("p", "feedback");
+    feedback.dataset.testid = "feedback";
+    feedback.setAttribute("aria-live", "polite");
+    panel.append(panelTitle, hintButton, undoButton, restartButton, hintBox, help, feedback);
+    playArea.append(board, panel);
+    const build = element("p", "build-status");
+    build.dataset.testid = "build-status";
+    build.textContent = buildStatus;
+    const restartDialog = element("dialog", "restart-dialog");
+    const restartTitle = element("h2");
+    restartTitle.textContent = "\u3053\u306E\u76E4\u9762\u3092\u6700\u521D\u304B\u3089\u3084\u308A\u76F4\u3057\u307E\u3059\u304B\uFF1F";
+    const restartText = element("p");
+    restartText.textContent = "\u76E4\u9762\u30FBTreat\u30FB\u7D4C\u904E\u6642\u9593\u30FBUndo\u5C65\u6B74\u3092\u30EA\u30BB\u30C3\u30C8\u3057\u307E\u3059\u3002";
+    const restartActions = element("div", "dialog-actions");
+    const restartCancelButton = element("button", "action-button action-button-secondary");
+    restartCancelButton.type = "button";
+    restartCancelButton.textContent = "\u30AD\u30E3\u30F3\u30BB\u30EB";
+    const restartConfirmButton = element("button", "action-button");
+    restartConfirmButton.type = "button";
+    restartConfirmButton.dataset.testid = "restart-confirm";
+    restartConfirmButton.textContent = "\u3084\u308A\u76F4\u3059";
+    restartActions.append(restartCancelButton, restartConfirmButton);
+    restartDialog.append(restartTitle, restartText, restartActions);
+    const levelDialog = element("dialog", "level-dialog");
+    levelDialog.dataset.testid = "level-dialog";
+    const levelHeading = element("h2");
+    levelHeading.textContent = "Levels";
+    const levelIntro = element("p");
+    levelIntro.textContent = "Unlocked Level\u306F\u3044\u3064\u3067\u3082\u904A\u3079\u307E\u3059\u3002Cleared Level\u306FBest Time\u3092\u6B8B\u3057\u305F\u307E\u307E\u518D\u6311\u6226\u3067\u304D\u307E\u3059\u3002";
+    const levelList = element("div", "level-list");
+    levelList.dataset.testid = "level-list";
+    const levelCloseButton = element("button", "action-button action-button-secondary");
+    levelCloseButton.type = "button";
+    levelCloseButton.textContent = "\u9589\u3058\u308B";
+    levelDialog.append(levelHeading, levelIntro, levelList, levelCloseButton);
+    const settingsDialog = element("dialog", "settings-dialog");
+    settingsDialog.dataset.testid = "settings-dialog";
+    const settingsHeading = element("h2");
+    settingsHeading.textContent = "Settings";
+    const settingsIntro = element("p");
+    settingsIntro.textContent = "\u904A\u3073\u65B9\u306F\u5909\u3048\u305A\u3001\u97F3\u3068\u52D5\u304D\u306E\u597D\u307F\u3060\u3051\u3092\u8ABF\u6574\u3067\u304D\u307E\u3059\u3002";
+    const settingsList = element("div", "settings-list");
+    const [soundRow, settingsSoundInput] = settingRow(
+      "\u52B9\u679C\u97F3",
+      "\u72AC\u30FB\xD7\u30FBUndo\u30FBMistake\u30FBClear\u306E\u77ED\u3044\u97F3\u3092\u9CF4\u3089\u3057\u307E\u3059\u3002",
+      "setting-sound"
+    );
+    const [motionRow, settingsReducedMotionInput] = settingRow(
+      "\u52D5\u304D\u3092\u6E1B\u3089\u3059",
+      "\u76E4\u9762\u306EAnimation\u3092\u6291\u3048\u307E\u3059\u3002OFF\u6642\u306FOS\u306E\u8A2D\u5B9A\u306B\u5F93\u3044\u307E\u3059\u3002",
+      "setting-reduced-motion"
+    );
+    settingsList.append(soundRow, motionRow);
+    const settingsCloseButton = element("button", "action-button action-button-secondary");
+    settingsCloseButton.type = "button";
+    settingsCloseButton.dataset.testid = "settings-close";
+    settingsCloseButton.textContent = "\u9589\u3058\u308B";
+    settingsDialog.append(settingsHeading, settingsIntro, settingsList, settingsCloseButton);
+    const clearDialog = element("dialog", "clear-dialog");
+    clearDialog.dataset.testid = "clear-dialog";
+    const clearMascot = element("div", "clear-mascot");
+    clearMascot.innerHTML = DOG_SVG;
+    const clearHeading = element("h2");
+    clearHeading.textContent = "\u3067\u304D\u305F\uFF01";
+    const clearLevel = element("p", "clear-level");
+    const clearStats = element("div", "clear-stats");
+    const clearTime = element("strong");
+    clearTime.dataset.testid = "clear-time";
+    const clearBest = element("strong");
+    clearBest.dataset.testid = "clear-best";
+    clearStats.append(clearTime, clearBest);
+    const clearNextButton = element("button", "action-button");
+    clearNextButton.type = "button";
+    clearNextButton.dataset.testid = "next-level";
+    clearNextButton.textContent = "\u6B21\u306E\u30D1\u30BA\u30EB";
+    const clearLevelsButton = element("button", "action-button action-button-secondary");
+    clearLevelsButton.type = "button";
+    clearLevelsButton.textContent = "Levels\u3092\u898B\u308B";
+    clearDialog.append(
+      clearMascot,
+      clearHeading,
+      clearLevel,
+      clearStats,
+      clearNextButton,
+      clearLevelsButton
+    );
+    shell.append(
+      header,
+      statusBar,
+      tutorialPanel,
+      playArea,
+      build,
+      restartDialog,
+      levelDialog,
+      settingsDialog,
+      clearDialog
+    );
+    root2.replaceChildren(shell);
+    return {
+      board,
+      cells,
+      levelValue,
+      dogCountValue,
+      treatsValue,
+      timerValue,
+      levelsButton,
+      settingsButton,
+      hintButton,
+      hintTitle,
+      hintText,
+      tutorialPanel,
+      tutorialTitle,
+      tutorialText,
+      undoButton,
+      restartButton,
+      restartDialog,
+      restartConfirmButton,
+      restartCancelButton,
+      levelDialog,
+      levelList,
+      levelCloseButton,
+      settingsDialog,
+      settingsSoundInput,
+      settingsReducedMotionInput,
+      settingsCloseButton,
+      clearDialog,
+      clearLevel,
+      clearTime,
+      clearBest,
+      clearNextButton,
+      clearLevelsButton,
+      feedback
+    };
+  }
+  function renderTimer(view2, timer, nowMs) {
+    view2.timerValue.textContent = formatElapsed(elapsedMs(timer, nowMs));
+  }
+  function renderSession(view2, puzzle2, session2, nowMs) {
+    const models = createBoardCellModels(puzzle2, session2.marks);
+    for (const model of models) {
+      const cell = view2.cells[model.index];
+      renderCellMark(cell, model.mark);
+      cell.disabled = session2.completed || session2.timer.status === "paused";
+      cell.setAttribute(
+        "aria-label",
+        `\u884C${model.cell.row + 1} \u5217${model.cell.col + 1}: ${markLabel(model.mark)}`
+      );
+    }
+    view2.board.dataset.completed = String(session2.completed);
+    view2.board.dataset.timerStatus = session2.timer.status;
+    view2.dogCountValue.textContent = `${dogCount(session2)} / ${puzzle2.size}`;
+    view2.treatsValue.textContent = String(session2.treatsRemaining);
+    view2.undoButton.disabled = !canUndo(session2);
+    view2.hintButton.disabled = session2.completed || session2.timer.status === "paused";
+    renderTimer(view2, session2.timer, nowMs);
+  }
+  function clearHintClasses(view2) {
+    for (const cell of view2.cells) {
+      cell.classList.remove("hint-attention", "hint-related", "hint-target");
+    }
+  }
+  function addHintClass(view2, puzzle2, cells, className) {
+    for (const cell of cells) {
+      const index = cellToIndex(puzzle2.size, cell);
+      view2.cells[index]?.classList.add(className);
+    }
+  }
+  function renderHint(view2, puzzle2, presentation) {
+    clearHintClasses(view2);
+    if (presentation === null) {
+      view2.hintTitle.textContent = "Hint";
+      view2.hintText.textContent = "\u898B\u308B\u5834\u6240\u304B\u3089\u9806\u306B\u30013\u6BB5\u968E\u3067\u30D2\u30F3\u30C8\u3092\u8868\u793A\u3057\u307E\u3059\u3002";
+      return;
+    }
+    view2.hintTitle.textContent = presentation.title;
+    view2.hintText.textContent = presentation.text;
+    addHintClass(view2, puzzle2, presentation.attentionCells, "hint-attention");
+    addHintClass(view2, puzzle2, presentation.relatedCells, "hint-related");
+    addHintClass(view2, puzzle2, presentation.targetCells, "hint-target");
+  }
+  function renderTutorial(view2, step) {
+    view2.tutorialPanel.hidden = step === null;
+    if (step === null) {
+      view2.tutorialTitle.textContent = "";
+      view2.tutorialText.textContent = "";
+      return;
+    }
+    view2.tutorialPanel.dataset.step = step.id;
+    view2.tutorialTitle.textContent = step.title;
+    view2.tutorialText.textContent = step.message;
+  }
+  function renderLevelSelect(view2, levels, onSelect) {
+    view2.levelList.replaceChildren();
+    for (const level of levels) {
+      const button = element("button", "level-tile");
+      button.type = "button";
+      button.dataset.testid = `level-tile-${level.levelNumber}`;
+      button.dataset.state = level.locked ? "locked" : level.current ? "current" : level.cleared ? "cleared" : "unlocked";
+      button.disabled = level.locked;
+      const number = element("strong");
+      number.textContent = `Level ${level.levelNumber}`;
+      const label = element("span");
+      label.textContent = level.label;
+      const state = element("small");
+      state.textContent = level.locked ? "Locked" : level.current ? "Current" : level.cleared ? "Cleared" : "Unlocked";
+      button.append(number, label, state);
+      button.addEventListener("click", () => onSelect(level.levelNumber));
+      view2.levelList.append(button);
+    }
+  }
+  function renderClearSummary(view2, summary) {
+    view2.clearLevel.textContent = `Level ${summary.levelNumber}`;
+    view2.clearTime.textContent = `Time ${formatElapsed(summary.clearTimeMs)}`;
+    view2.clearBest.textContent = `Best ${formatElapsed(summary.bestTimeMs)}`;
+    view2.clearNextButton.hidden = !summary.hasNextLevel;
+  }
+
+  // src/ui/tutorial.ts
+  function matchesCondition(condition, session2) {
+    const dogCount2 = session2.marks.filter((mark) => mark === "dog").length;
+    const excludedCount = session2.marks.filter((mark) => mark === "excluded").length;
+    switch (condition) {
+      case "no-dog":
+        return dogCount2 === 0;
+      case "dog-no-x":
+        return dogCount2 > 0 && excludedCount === 0;
+      case "has-x":
+        return dogCount2 > 0 && excludedCount > 0 && dogCount2 < 2;
+      case "free-play":
+        return true;
+    }
+  }
+  function getActiveTutorialStep(level, session2, enabled) {
+    if (!enabled || !level.tutorial || session2.completed) {
+      return null;
+    }
+    return level.tutorial.find((step) => matchesCondition(step.condition, session2)) ?? null;
+  }
+
+  // src/app/build-info.ts
+  function getBuildStatus() {
+    return "Build scaffold ready";
+  }
+
+  // src/app/main.ts
+  var root = document.querySelector("#app");
+  if (!root) {
+    throw new Error("Jackdoku root element was not found.");
+  }
+  var persistence = createPersistenceAdapter();
+  var saveLoad = persistence.load();
+  root.dataset.persistence = saveLoad.mode;
+  root.dataset.saveLoadStatus = saveLoad.status;
+  if (saveLoad.issue) {
+    root.dataset.persistenceIssue = saveLoad.issue;
+  }
+  var saveData = saveLoad.data;
+  var sfx = createSfxPlayer(() => saveData.settings.soundEffects);
+  var motionMediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var currentLevel = resolveStartupLevel(saveData);
+  var runtimeLevel = requireRuntimeLevel(currentLevel);
+  var puzzle = runtimeLevel.puzzle;
+  var session = restoreStartupSession(puzzle, currentLevel, saveData, performance.now());
+  var hintState = createIdleHintState();
+  var view;
+  var unbindBoardInteractions = () => {
+  };
+  var clearTransitionTimer = null;
+  function requireRuntimeLevel(levelNumber) {
+    const level = getRuntimeLevel(levelNumber);
+    if (!level) {
+      throw new Error(`Runtime level ${levelNumber} is unavailable.`);
+    }
+    return level;
+  }
+  function resolveStartupLevel(data) {
+    const sessionLevel = data.session?.level;
+    if (sessionLevel && getRuntimeLevel(sessionLevel)) {
+      return sessionLevel;
+    }
+    return clampRuntimeLevel(data.latestUnlockedLevel);
+  }
+  function restoreStartupSession(targetPuzzle, levelNumber, data, nowMs) {
+    if (data.session?.level !== levelNumber) {
+      return createGameSession(targetPuzzle);
+    }
+    return restoreGameSession(targetPuzzle, data.session, nowMs) ?? createGameSession(targetPuzzle);
+  }
+  function updatePersistenceStatus(mode, issue) {
+    root.dataset.persistence = mode;
+    if (issue) {
+      root.dataset.persistenceIssue = issue;
+    } else {
+      delete root.dataset.persistenceIssue;
+    }
+  }
+  function writeSaveData() {
+    const write = persistence.save(saveData);
+    updatePersistenceStatus(write.mode, write.issue);
+  }
+  function persistCurrentSession(nowMs) {
+    saveData = {
+      ...saveData,
+      currentLevel,
+      latestUnlockedLevel: Math.max(saveData.latestUnlockedLevel, currentLevel),
+      session: snapshotGameSession(currentLevel, session, nowMs)
+    };
+    writeSaveData();
+  }
+  function recordCompletion(nowMs) {
+    const clearTimeMs = elapsedMs(session.timer, nowMs);
+    const key = String(currentLevel);
+    const previousBest = saveData.bestTimesMs[key];
+    const bestTimeMs = previousBest === void 0 ? clearTimeMs : Math.min(previousBest, clearTimeMs);
+    const completedLevels = [.../* @__PURE__ */ new Set([...saveData.completedLevels, currentLevel])].sort(
+      (a, b) => a - b
+    );
+    const nextUnlocked = Math.min(RUNTIME_LEVELS.length, currentLevel + 1);
+    saveData = {
+      ...saveData,
+      currentLevel,
+      latestUnlockedLevel: Math.max(saveData.latestUnlockedLevel, nextUnlocked),
+      completedLevels,
+      bestTimesMs: {
+        ...saveData.bestTimesMs,
+        [key]: bestTimeMs
+      },
+      session: null
+    };
+    writeSaveData();
+  }
+  function setFeedback(message) {
+    view.feedback.textContent = message;
+  }
+  function showMistake(cell) {
+    const index = cell.row * puzzle.size + cell.col;
+    const target = view.cells[index];
+    target?.classList.add("cell-error");
+    window.setTimeout(() => target?.classList.remove("cell-error"), 420);
+  }
+  function shouldAutosave(result) {
+    return result.outcome === "changed" || result.outcome === "mistake" || result.outcome === "undone" || result.outcome === "restarted";
+  }
+  function shouldInvalidateHint(result) {
+    return result.outcome === "changed" || result.outcome === "undone" || result.outcome === "restarted";
+  }
+  function applyMotionPreference() {
+    const reduced = saveData.settings.reducedMotion === "reduced" || saveData.settings.reducedMotion === "system" && motionMediaQuery.matches;
+    root.dataset.reducedMotion = reduced ? "true" : "false";
+  }
+  function syncSettingsView() {
+    view.settingsSoundInput.checked = saveData.settings.soundEffects;
+    view.settingsReducedMotionInput.checked = saveData.settings.reducedMotion === "reduced";
+  }
+  function updateSettings(settings) {
+    saveData = {
+      ...saveData,
+      settings
+    };
+    applyMotionPreference();
+    syncSettingsView();
+    writeSaveData();
+  }
+  function playActionSfx(action, result, justCompleted) {
+    if (justCompleted) {
+      sfx.play("clear");
+      return;
+    }
+    if (result.outcome === "mistake") {
+      sfx.play("mistake");
+      return;
+    }
+    if (result.outcome === "undone") {
+      sfx.play("undo");
+      return;
+    }
+    if (result.outcome !== "changed") {
+      return;
+    }
+    if (action.type === "PLACE_DOG") {
+      sfx.play("dog");
+    } else if (action.type === "TOGGLE_EXCLUDED" || action.type === "BULK_SET_EXCLUDED" || action.type === "BULK_CLEAR_EXCLUDED") {
+      sfx.play("mark");
+    }
+  }
+  function renderCurrent(nowMs) {
+    renderSession(view, puzzle, session, nowMs);
+    renderHint(view, puzzle, getHintPresentation(puzzle, hintState));
+    const tutorialEnabled = currentLevel === 1 && !saveData.completedLevels.includes(1);
+    renderTutorial(view, getActiveTutorialStep(runtimeLevel, session, tutorialEnabled));
+  }
+  function scheduleClearDialog(nowMs) {
+    if (clearTransitionTimer !== null) {
+      window.clearTimeout(clearTransitionTimer);
+    }
+    const clearTimeMs = elapsedMs(session.timer, nowMs);
+    const bestTimeMs = saveData.bestTimesMs[String(currentLevel)] ?? clearTimeMs;
+    renderClearSummary(view, {
+      levelNumber: currentLevel,
+      clearTimeMs,
+      bestTimeMs,
+      hasNextLevel: currentLevel < RUNTIME_LEVELS.length
+    });
+    clearTransitionTimer = window.setTimeout(() => {
+      clearTransitionTimer = null;
+      if (session.completed && !view.clearDialog.open) {
+        view.clearDialog.showModal();
+      }
+    }, 300);
+  }
+  function dispatch(action, options) {
+    const nowMs = performance.now();
+    const wasCompleted = session.completed;
+    const result = reduceGameSession(puzzle, session, action, nowMs);
+    session = result.session;
+    if (shouldInvalidateHint(result)) {
+      hintState = createIdleHintState();
+    }
+    if (result.outcome === "mistake" && result.mistakeCell) {
+      setFeedback("\u305D\u3053\u306B\u306F\u72AC\u3092\u7F6E\u3051\u307E\u305B\u3093\u3002Treat\u30921\u3064\u4F7F\u3044\u307E\u3057\u305F\u3002");
+      showMistake(result.mistakeCell);
+    } else if (result.outcome === "changed" || result.outcome === "undone") {
+      setFeedback("");
+    } else if (result.outcome === "restarted") {
+      setFeedback("\u76E4\u9762\u3092\u30EA\u30B9\u30BF\u30FC\u30C8\u3057\u307E\u3057\u305F\u3002");
+    }
+    const justCompleted = !wasCompleted && session.completed;
+    playActionSfx(action, result, justCompleted);
+    if (justCompleted) {
+      setFeedback("\u3067\u304D\u305F\uFF01 \u30AF\u30EA\u30A2\u7D50\u679C\u3092\u8A18\u9332\u3057\u307E\u3057\u305F\u3002");
+      recordCompletion(nowMs);
+    } else if (shouldAutosave(result) || result.outcome === "timer" && options?.autosaveTimer) {
+      persistCurrentSession(nowMs);
+    }
+    renderCurrent(nowMs);
+    if (justCompleted) {
+      scheduleClearDialog(nowMs);
+    }
+    return result;
+  }
+  function showNextHint() {
+    const previous = hintState;
+    hintState = advanceHintState(hintState, puzzle, session.marks);
+    if (hintState.kind === "idle") {
+      setFeedback(
+        previous.kind === "deduction" ? "\u30D2\u30F3\u30C8\u306E\u7D50\u8AD6\u3092\u76E4\u9762\u3067\u8A66\u3057\u3066\u307F\u307E\u3057\u3087\u3046\u3002" : "\u3044\u307E\u4F7F\u3048\u308B\u8AD6\u7406\u30D2\u30F3\u30C8\u306F\u3042\u308A\u307E\u305B\u3093\u3002\u76E4\u9762\u3092\u3082\u3046\u4E00\u5EA6\u78BA\u8A8D\u3057\u3066\u307F\u307E\u3057\u3087\u3046\u3002"
+      );
+    } else {
+      setFeedback("");
+    }
+    renderHint(view, puzzle, getHintPresentation(puzzle, hintState));
+  }
+  function createLevelTiles() {
+    return RUNTIME_LEVELS.map((level) => ({
+      levelNumber: level.levelNumber,
+      label: level.label,
+      current: level.levelNumber === currentLevel,
+      cleared: saveData.completedLevels.includes(level.levelNumber),
+      locked: level.levelNumber > saveData.latestUnlockedLevel
+    }));
+  }
+  function resumeAfterOverlay() {
+    if (document.visibilityState === "visible" && !session.completed) {
+      dispatch(resumeSessionTimer());
+    }
+  }
+  function closeLevelSelect() {
+    if (view.levelDialog.open) {
+      view.levelDialog.close();
+    }
+    resumeAfterOverlay();
+  }
+  function openLevelSelect() {
+    if (!session.completed) {
+      dispatch(pauseSessionTimer(), { autosaveTimer: true });
+    }
+    renderLevelSelect(view, createLevelTiles(), (levelNumber) => {
+      if (levelNumber > saveData.latestUnlockedLevel) {
+        return;
+      }
+      if (levelNumber === currentLevel) {
+        closeLevelSelect();
+        return;
+      }
+      if (view.levelDialog.open) {
+        view.levelDialog.close();
+      }
+      loadLevel(levelNumber, false);
+    });
+    view.levelDialog.showModal();
+  }
+  function closeSettings() {
+    if (view.settingsDialog.open) {
+      view.settingsDialog.close();
+    }
+    resumeAfterOverlay();
+  }
+  function openSettings() {
+    if (!session.completed) {
+      dispatch(pauseSessionTimer(), { autosaveTimer: true });
+    }
+    syncSettingsView();
+    view.settingsDialog.showModal();
+  }
+  function bindCurrentView() {
+    unbindBoardInteractions();
+    unbindBoardInteractions = bindBoardPointerInteractions(view.board, {
+      getMark(cell) {
+        return getCellMark(puzzle, session, cell) ?? "empty";
+      },
+      onSingleClick(cell) {
+        const mark = getCellMark(puzzle, session, cell);
+        dispatch(mark === "dog" ? removeDog(cell) : toggleExcluded(cell));
+      },
+      onDoubleClick(cell) {
+        dispatch(placeDog(cell));
+      },
+      onRightClick(cell) {
+        dispatch(placeDog(cell));
+      },
+      onDrag(cells, mode) {
+        dispatch(mode === "mark" ? bulkSetExcluded(cells) : bulkClearExcluded(cells));
+      }
+    });
+    view.hintButton.addEventListener("click", showNextHint);
+    view.undoButton.addEventListener("click", () => dispatch(undo()));
+    view.levelsButton.addEventListener("click", openLevelSelect);
+    view.settingsButton.addEventListener("click", openSettings);
+    view.levelCloseButton.addEventListener("click", closeLevelSelect);
+    view.levelDialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      closeLevelSelect();
+    });
+    view.settingsSoundInput.addEventListener("change", () => {
+      updateSettings({
+        ...saveData.settings,
+        soundEffects: view.settingsSoundInput.checked
+      });
+    });
+    view.settingsReducedMotionInput.addEventListener("change", () => {
+      updateSettings({
+        ...saveData.settings,
+        reducedMotion: view.settingsReducedMotionInput.checked ? "reduced" : "system"
+      });
+    });
+    view.settingsCloseButton.addEventListener("click", closeSettings);
+    view.settingsDialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      closeSettings();
+    });
+    view.restartButton.addEventListener("click", () => {
+      dispatch(pauseSessionTimer());
+      view.restartDialog.showModal();
+    });
+    view.restartCancelButton.addEventListener("click", () => {
+      view.restartDialog.close();
+      resumeAfterOverlay();
+    });
+    view.restartConfirmButton.addEventListener("click", () => {
+      view.restartDialog.close();
+      dispatch(restart());
+    });
+    view.restartDialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      view.restartDialog.close();
+      resumeAfterOverlay();
+    });
+    view.clearDialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+    });
+    view.clearNextButton.addEventListener("click", () => {
+      view.clearDialog.close();
+      if (currentLevel < RUNTIME_LEVELS.length) {
+        loadLevel(currentLevel + 1, false);
+      }
+    });
+    view.clearLevelsButton.addEventListener("click", () => {
+      view.clearDialog.close();
+      openLevelSelect();
+    });
+  }
+  function mountView() {
+    view = createGameView(root, puzzle, getBuildStatus(), currentLevel);
+    applyMotionPreference();
+    syncSettingsView();
+    bindCurrentView();
+    renderCurrent(performance.now());
+  }
+  function loadLevel(levelNumber, restoreSavedSession) {
+    if (clearTransitionTimer !== null) {
+      window.clearTimeout(clearTransitionTimer);
+      clearTransitionTimer = null;
+    }
+    currentLevel = clampRuntimeLevel(levelNumber);
+    runtimeLevel = requireRuntimeLevel(currentLevel);
+    puzzle = runtimeLevel.puzzle;
+    hintState = createIdleHintState();
+    const nowMs = performance.now();
+    session = restoreSavedSession ? restoreStartupSession(puzzle, currentLevel, saveData, nowMs) : createGameSession(puzzle);
+    saveData = {
+      ...saveData,
+      currentLevel,
+      latestUnlockedLevel: Math.max(saveData.latestUnlockedLevel, currentLevel)
+    };
+    mountView();
+    persistCurrentSession(nowMs);
+  }
+  mountView();
+  motionMediaQuery.addEventListener("change", () => {
+    if (saveData.settings.reducedMotion === "system") {
+      applyMotionPreference();
+    }
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      dispatch(pauseSessionTimer(), { autosaveTimer: true });
+    } else if (!view.restartDialog.open && !view.levelDialog.open && !view.settingsDialog.open && !view.clearDialog.open) {
+      dispatch(resumeSessionTimer());
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    const target = event.target;
+    const editable = target?.isContentEditable || target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.tagName === "SELECT";
+    const dialogOpen = view.restartDialog.open || view.levelDialog.open || view.settingsDialog.open || view.clearDialog.open;
+    if (!editable && !dialogOpen && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+      event.preventDefault();
+      dispatch(undo());
+      return;
+    }
+    if (!editable && !dialogOpen && event.key.toLowerCase() === "h" && !session.completed) {
+      event.preventDefault();
+      showNextHint();
+    }
+  });
+  window.setInterval(() => {
+    renderTimer(view, session.timer, performance.now());
+  }, 250);
+})();
+
+    </script>
+  </body>
+</html>
