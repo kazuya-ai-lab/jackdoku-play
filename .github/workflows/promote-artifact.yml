@@ -1,18 +1,20 @@
 name: Promote verified artifact
 
 on:
-  push:
+  pull_request:
     branches:
-      - feat/pages-distribution
-    paths:
-      - .github/workflows/promote-artifact.yml
-  workflow_dispatch:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 permissions:
   contents: write
 
 jobs:
   promote:
+    if: github.head_ref == 'feat/pages-distribution'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout distribution branch
@@ -22,7 +24,7 @@ jobs:
 
       - name: Download verified Jackdoku artifact
         env:
-          SOURCE_URL: 'https://sdmntprkoreacentral.oaiusercontent.com/files/00000000-55e4-8206-b87e-db336cae6e74/raw?se=2026-09-15T22%3A56%3A21Z&sp=r&sv=2026-02-06&sr=b&scid=c02ee0dd-41a8-5151-bd96-cc1df0b10e0e&skoid=0765b554-4b90-4fa2-9d6d-0055a2427910&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-15T21%3A08%3A00Z&ske=2026-09-16T21%3A08%3A00Z&sks=b&skv=2026-02-06&sig=wb07eT6%2B2PHbJieLjixOs0dGE7wF1sAIPqegrrljSDE%3D'
+          SOURCE_URL: 'https://sdmntprkoreacentral.oaiusercontent.com/files/00000000-9b7c-8206-9bb1-ca5acfecef0d/raw?se=2026-09-15T22%3A57%3A06Z&sp=r&sv=2026-02-06&sr=b&scid=6748ce82-9fa9-5655-a56b-6afad2c27c5d&skoid=0765b554-4b90-4fa2-9d6d-0055a2427910&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-15T21%3A16%3A02Z&ske=2026-09-16T21%3A16%3A02Z&sks=b&skv=2026-02-06&sig=CNl%2B2zosfkkraLp2DC9UG4e/r%2ByALR5s7MAfzuRJfYQ%3D'
           EXPECTED_SHA256: '5ebcd9b118a3fbe70a65115c03f056cc4e7dded31beb799f24ae61477ef06d3a'
         run: |
           curl --fail --location --silent --show-error "$SOURCE_URL" --output index.html
