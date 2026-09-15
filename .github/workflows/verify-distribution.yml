@@ -1,0 +1,33 @@
+name: Verify Distribution
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Verify promoted artifact digest
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f index.html
+          test -f PROVENANCE.md
+
+          expected="$(sed -n 's/^- Artifact SHA-256: `\([0-9a-f]\{64\}\)`$/\1/p' PROVENANCE.md)"
+          test -n "$expected"
+
+          actual="$(sha256sum index.html | cut -d' ' -f1)"
+          test "$actual" = "$expected"
+          grep -qi '<!doctype html>' index.html
+
+          echo "Verified index.html SHA-256: $actual"
