@@ -1,25 +1,25 @@
-# Jackdoku Play
+# jackdoku-play
 
-Jackdokuのスマートフォン / Web配布用リポジトリです。
+Jackdokuのスマートフォン・Web配布用リポジトリです。
 
-開発ソースはPrivateリポジトリで管理し、このPublicリポジトリにはHuman Reviewと自動検証を通過した生成済みゲームだけを配置します。
+開発ソースはPrivateリポジトリ`kazuya-ai-lab/jackdoku`で管理し、このPublicリポジトリには検証済みの生成物と配布メタデータのみを配置します。
 
 ## Play
 
-GitHub Pages有効化後、次のURLから遊べます。
-
-`https://kazuya-ai-lab.github.io/jackdoku-play/`
-
-スマートフォンではSafari / Chromeから開きます。iPhoneではSafariの共有メニューから「ホーム画面に追加」することで、Web Appのように起動できます。
+https://kazuya-ai-lab.github.io/jackdoku-play/
 
 ## Distribution policy
 
-- `index.html` はPrivate開発リポジトリのAccepted Buildから昇格する
-- 開発ソースをこのリポジトリへ複製しない
-- 配布時にSource commitとSHA-256を `PROVENANCE.md` に記録する
-- 広告・Account・Analytics・外部Runtime APIを追加しない
-- 更新はPull Request → Human Review → Squash Mergeを基本とする
+- ゲーム実装はこのPublicリポジトリで直接修正しません。
+- Private側でBuild / Test / Distribution Checkを完了したArtifactだけを昇格します。
+- `PROVENANCE.md`にSource commit、Workflow Run、Artifact digestを記録します。
+- `Verify Distribution` Workflowで`PROVENANCE.md`のSHA-256と`index.html`実体を照合します。
+- GitHub Pagesは`main` / `/(root)`から配信します。
 
-## License
+## Current distribution
 
-Apache License 2.0
+- Source: `kazuya-ai-lab/jackdoku` `d12277802ee3dbc6ab85c9600c1a36f1c569f385`
+- Source workflow: Playtest Package Run #4
+- Public main: `073fb2f9903c0632c123a474e814b1dcce268783`
+- Artifact SHA-256: `5ebcd9b118a3fbe70a65115c03f056cc4e7dded31beb799f24ae61477ef06d3a`
+- Pages deployment: SUCCESS
