@@ -1,0 +1,39 @@
+name: Promote verified artifact
+
+on:
+  push:
+    branches:
+      - feat/pages-distribution
+    paths:
+      - .github/workflows/promote-artifact.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout distribution branch
+        uses: actions/checkout@v7
+        with:
+          ref: feat/pages-distribution
+
+      - name: Download verified Jackdoku artifact
+        env:
+          SOURCE_URL: 'https://sdmntprkoreacentral.oaiusercontent.com/files/00000000-55e4-8206-b87e-db336cae6e74/raw?se=2026-09-15T22%3A56%3A21Z&sp=r&sv=2026-02-06&sr=b&scid=c02ee0dd-41a8-5151-bd96-cc1df0b10e0e&skoid=0765b554-4b90-4fa2-9d6d-0055a2427910&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-15T21%3A08%3A00Z&ske=2026-09-16T21%3A08%3A00Z&sks=b&skv=2026-02-06&sig=wb07eT6%2B2PHbJieLjixOs0dGE7wF1sAIPqegrrljSDE%3D'
+          EXPECTED_SHA256: '5ebcd9b118a3fbe70a65115c03f056cc4e7dded31beb799f24ae61477ef06d3a'
+        run: |
+          curl --fail --location --silent --show-error "$SOURCE_URL" --output index.html
+          echo "$EXPECTED_SHA256  index.html" | sha256sum --check --strict
+          grep -qi '<!doctype html>' index.html
+
+      - name: Commit promoted distribution
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'feat(distribution): 検証済みJackdokuを昇格' -m 'Private mainのPlaytest Package #4をSHA-256照合後、そのままindex.htmlとして配置する。'
+          git push origin HEAD:feat/pages-distribution
