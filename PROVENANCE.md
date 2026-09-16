@@ -5,13 +5,13 @@
 ## Current distribution
 
 - Source repository: `kazuya-ai-lab/jackdoku` (Private)
-- Source `main` commit: `2e7a7d205d6fc10db9b01f84784443f0c4a87611`
-- Source change: `feat(levels): 200レベルBankと10,000対応基盤を追加 (#21)`
-- Playtest Package run: `#7`
+- Source `main` commit: `8c4c263ecc26005387af2db9993875edae4f0fb2`
+- Source change: `feat(game): TREATSとTIMEを削除 (#22)`
+- Playtest Package run: `#8`
 - Artifact: `Jackdoku.html`
-- Artifact size: `210992 bytes`
-- Artifact SHA-256: `83c79ae666aff350c127f5d4a8fdde8c371db88eea761bd0e93017b371dbc6eb`
-- Artifact Git Blob SHA-1: `9280f02f7fc52c817d0baff3ecdb0bfad0965c64`
+- Artifact size: `206060 bytes`
+- Artifact SHA-256: `9478c61df88044d58dfe97ed351bf1223fcfe9329f05875f4554ee79886c2d10`
+- Artifact Git Blob SHA-1: `93d93ec6aae7f2f4784e4ca1305f368714cc6cea`
 - Playable levels: `200`
 - Distribution target: `index.html`
 
