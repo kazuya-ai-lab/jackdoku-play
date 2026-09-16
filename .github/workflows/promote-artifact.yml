@@ -1,0 +1,53 @@
+name: Promote Accepted Artifact
+
+on:
+  push:
+    branches:
+      - feat/promote-200-level-bank
+    paths:
+      - .github/workflows/promote-artifact.yml
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download and verify accepted artifact
+        shell: bash
+        env:
+          ARTIFACT_URL: 'https://sdmntprkoreacentral.oaiusercontent.com/files/00000000-6714-8206-aec4-5de46004253b/raw?se=2026-09-16T00%3A42%3A55Z&sp=r&sv=2026-02-06&sr=b&scid=cc9c8fd8-1569-5890-96c1-b22c80dc8851&skoid=0765b554-4b90-4fa2-9d6d-0055a2427910&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-15T19%3A11%3A58Z&ske=2026-09-16T19%3A11%3A58Z&sks=b&skv=2026-02-06&sig=KKn5p/1C1ZQaT1pycTPP1yt82jr2CofbmvcK%2B2VcTU8%3D'
+          EXPECTED_SHA256: '83c79ae666aff350c127f5d4a8fdde8c371db88eea761bd0e93017b371dbc6eb'
+        run: |
+          set -euo pipefail
+          curl --fail --location "$ARTIFACT_URL" --output artifact.payload
+
+          if unzip -t artifact.payload >/dev/null 2>&1; then
+            unzip -p artifact.payload Jackdoku.html > candidate.html
+          else
+            cp artifact.payload candidate.html
+          fi
+
+          actual="$(sha256sum candidate.html | cut -d' ' -f1)"
+          test "$actual" = "$EXPECTED_SHA256"
+          grep -qi '<!doctype html>' candidate.html
+          cp candidate.html index.html
+          echo "Verified accepted artifact SHA-256: $actual"
+
+      - name: Commit promoted artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'index.html is already current.'
+            exit 0
+          fi
+          git commit -m 'feat(distribution): 200レベル版Artifactを昇格' -m 'Private mainのPlaytest Package Run #7で検証済みのArtifactをSHA-256照合後、そのままindex.htmlとして反映する。'
+          git push origin HEAD:feat/promote-200-level-bank
