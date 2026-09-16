@@ -90,7 +90,7 @@ h1 {
 
 .status-bar {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   width: min(100%, 38rem);
   margin: 1.25rem auto;
@@ -550,20 +550,6 @@ h1 {
   color: #6d665a;
 }
 
-.clear-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
-  margin: 0 0 1rem;
-}
-
-.clear-stats strong {
-  padding: 0.65rem;
-  border-radius: 0.65rem;
-  background: #f4efe5;
-  font-size: 0.85rem;
-}
-
 #app[data-reduced-motion='true'] .board-cell {
   transition: none;
 }
@@ -886,8 +872,6 @@ h1 {
   });
   var undo = () => ({ type: "UNDO" });
   var restart = () => ({ type: "RESTART" });
-  var pauseSessionTimer = () => ({ type: "PAUSE_TIMER" });
-  var resumeSessionTimer = () => ({ type: "RESUME_TIMER" });
 
   // src/puzzle/types.ts
   function cellToIndex(size, cell) {
@@ -1063,58 +1047,7 @@ h1 {
     };
   }
 
-  // src/game/timer.ts
-  function elapsedDelta(startedAt, nowMs) {
-    return Math.max(0, nowMs - startedAt);
-  }
-  function createSessionTimer() {
-    return { status: "ready", elapsedMs: 0 };
-  }
-  function startTimer(timer, nowMs) {
-    if (timer.status !== "ready") {
-      return timer;
-    }
-    return { status: "running", elapsedMs: 0, runningSinceMs: nowMs };
-  }
-  function pauseTimer(timer, nowMs) {
-    if (timer.status !== "running") {
-      return timer;
-    }
-    return {
-      status: "paused",
-      elapsedMs: timer.elapsedMs + elapsedDelta(timer.runningSinceMs, nowMs)
-    };
-  }
-  function resumeTimer(timer, nowMs) {
-    if (timer.status !== "paused") {
-      return timer;
-    }
-    return { status: "running", elapsedMs: timer.elapsedMs, runningSinceMs: nowMs };
-  }
-  function stopTimer(timer, nowMs) {
-    if (timer.status === "running") {
-      return {
-        status: "stopped",
-        elapsedMs: timer.elapsedMs + elapsedDelta(timer.runningSinceMs, nowMs)
-      };
-    }
-    if (timer.status === "paused") {
-      return { status: "stopped", elapsedMs: timer.elapsedMs };
-    }
-    if (timer.status === "ready") {
-      return { status: "stopped", elapsedMs: 0 };
-    }
-    return timer;
-  }
-  function elapsedMs(timer, nowMs) {
-    if (timer.status === "running") {
-      return timer.elapsedMs + elapsedDelta(timer.runningSinceMs, nowMs);
-    }
-    return timer.elapsedMs;
-  }
-
   // src/game/session.ts
-  var INITIAL_TREATS = 3;
   function assertPlayablePuzzle(puzzle2) {
     const validation = validatePuzzleStructure(puzzle2);
     if (!validation.valid || puzzle2.solution === void 0) {
@@ -1127,10 +1060,8 @@ h1 {
     return {
       puzzleId: puzzle2.id,
       marks: Array.from({ length: puzzle2.size * puzzle2.size }, () => "empty"),
-      treatsRemaining: INITIAL_TREATS,
       completed: false,
-      history: [],
-      timer: createSessionTimer()
+      history: []
     };
   }
   function getCellMark(puzzle2, session2, cell) {
@@ -1143,7 +1074,7 @@ h1 {
     return session2.marks.filter((mark) => mark === "dog").length;
   }
   function canUndo(session2) {
-    return !session2.completed && session2.timer.status !== "paused" && session2.history.length > 0;
+    return !session2.completed && session2.history.length > 0;
   }
   function isComplete(puzzle2, marks) {
     if (puzzle2.solution === void 0) {
@@ -1162,7 +1093,7 @@ h1 {
     }
     return [...indices].sort((a, b) => a - b);
   }
-  function applyMarkChanges(puzzle2, session2, changes, nowMs) {
+  function applyMarkChanges(puzzle2, session2, changes) {
     if (changes.length === 0) {
       return { session: session2, outcome: "noop" };
     }
@@ -1171,58 +1102,45 @@ h1 {
       marks[change.index] = change.after;
     }
     const transaction = { kind: "marks", changes };
-    let timer = startTimer(session2.timer, nowMs);
-    const completed = isComplete(puzzle2, marks);
-    if (completed) {
-      timer = stopTimer(timer, nowMs);
-    }
     return {
       session: {
         ...session2,
         marks,
-        completed,
-        history: [...session2.history, transaction],
-        timer
+        completed: isComplete(puzzle2, marks),
+        history: [...session2.history, transaction]
       },
       outcome: "changed"
     };
   }
-  function toggleExcluded2(puzzle2, session2, cell, nowMs) {
+  function toggleExcluded2(puzzle2, session2, cell) {
     const mark = getCellMark(puzzle2, session2, cell);
     if (mark === void 0 || mark === "dog") {
       return { session: session2, outcome: "noop" };
     }
     const index = cellToIndex(puzzle2.size, cell);
     const after = mark === "excluded" ? "empty" : "excluded";
-    return applyMarkChanges(puzzle2, session2, [{ index, before: mark, after }], nowMs);
+    return applyMarkChanges(puzzle2, session2, [{ index, before: mark, after }]);
   }
-  function placeDog2(puzzle2, session2, cell, nowMs) {
+  function placeDog2(puzzle2, session2, cell) {
     const mark = getCellMark(puzzle2, session2, cell);
     if (mark !== "empty") {
       return { session: session2, outcome: "noop" };
     }
     if (puzzle2.solution[cell.row] !== cell.col) {
-      return {
-        session: {
-          ...session2,
-          treatsRemaining: Math.max(0, session2.treatsRemaining - 1)
-        },
-        outcome: "mistake",
-        mistakeCell: cell
-      };
+      return { session: session2, outcome: "mistake", mistakeCell: cell };
     }
     const index = cellToIndex(puzzle2.size, cell);
-    return applyMarkChanges(puzzle2, session2, [{ index, before: "empty", after: "dog" }], nowMs);
+    return applyMarkChanges(puzzle2, session2, [{ index, before: "empty", after: "dog" }]);
   }
-  function removeDog2(puzzle2, session2, cell, nowMs) {
+  function removeDog2(puzzle2, session2, cell) {
     const mark = getCellMark(puzzle2, session2, cell);
     if (mark !== "dog") {
       return { session: session2, outcome: "noop" };
     }
     const index = cellToIndex(puzzle2.size, cell);
-    return applyMarkChanges(puzzle2, session2, [{ index, before: "dog", after: "empty" }], nowMs);
+    return applyMarkChanges(puzzle2, session2, [{ index, before: "dog", after: "empty" }]);
   }
-  function bulkExcluded(puzzle2, session2, cells, mode, nowMs) {
+  function bulkExcluded(puzzle2, session2, cells, mode) {
     const changes = [];
     for (const index of uniqueValidIndices(puzzle2, cells)) {
       const before = session2.marks[index];
@@ -1232,7 +1150,7 @@ h1 {
         changes.push({ index, before, after: "empty" });
       }
     }
-    return applyMarkChanges(puzzle2, session2, changes, nowMs);
+    return applyMarkChanges(puzzle2, session2, changes);
   }
   function undoSession(session2) {
     if (!canUndo(session2)) {
@@ -1253,21 +1171,10 @@ h1 {
       outcome: "undone"
     };
   }
-  function boardMutationAllowed(session2) {
-    return !session2.completed && session2.timer.status !== "paused" && session2.timer.status !== "stopped";
-  }
-  function reduceGameSession(puzzle2, session2, action, nowMs) {
+  function reduceGameSession(puzzle2, session2, action) {
     assertPlayablePuzzle(puzzle2);
     if (session2.puzzleId !== puzzle2.id) {
       throw new Error(`Session puzzle mismatch: ${session2.puzzleId} !== ${puzzle2.id}`);
-    }
-    if (action.type === "PAUSE_TIMER") {
-      const timer = pauseTimer(session2.timer, nowMs);
-      return timer === session2.timer ? { session: session2, outcome: "noop" } : { session: { ...session2, timer }, outcome: "timer" };
-    }
-    if (action.type === "RESUME_TIMER") {
-      const timer = resumeTimer(session2.timer, nowMs);
-      return timer === session2.timer ? { session: session2, outcome: "noop" } : { session: { ...session2, timer }, outcome: "timer" };
     }
     if (action.type === "RESTART") {
       return { session: createGameSession(puzzle2), outcome: "restarted" };
@@ -1275,20 +1182,20 @@ h1 {
     if (action.type === "UNDO") {
       return undoSession(session2);
     }
-    if (!boardMutationAllowed(session2)) {
+    if (session2.completed) {
       return { session: session2, outcome: "noop" };
     }
     switch (action.type) {
       case "TOGGLE_EXCLUDED":
-        return toggleExcluded2(puzzle2, session2, action.cell, nowMs);
+        return toggleExcluded2(puzzle2, session2, action.cell);
       case "PLACE_DOG":
-        return placeDog2(puzzle2, session2, action.cell, nowMs);
+        return placeDog2(puzzle2, session2, action.cell);
       case "REMOVE_DOG":
-        return removeDog2(puzzle2, session2, action.cell, nowMs);
+        return removeDog2(puzzle2, session2, action.cell);
       case "BULK_SET_EXCLUDED":
-        return bulkExcluded(puzzle2, session2, action.cells, "set", nowMs);
+        return bulkExcluded(puzzle2, session2, action.cells, "set");
       case "BULK_CLEAR_EXCLUDED":
-        return bulkExcluded(puzzle2, session2, action.cells, "clear", nowMs);
+        return bulkExcluded(puzzle2, session2, action.cells, "clear");
     }
   }
 
@@ -1623,15 +1530,15 @@ h1 {
   }
 
   // src/storage/types.ts
-  var SAVE_SCHEMA_VERSION = 1;
-  var SAVE_STORAGE_KEY = "jackdoku.save.v1";
+  var SAVE_SCHEMA_VERSION = 2;
+  var SAVE_STORAGE_KEY = "jackdoku.save.v2";
+  var LEGACY_SAVE_STORAGE_KEY = "jackdoku.save.v1";
   function createDefaultSaveData() {
     return {
       schemaVersion: SAVE_SCHEMA_VERSION,
       currentLevel: 1,
       latestUnlockedLevel: 1,
       completedLevels: [],
-      bestTimesMs: {},
       settings: {
         soundEffects: true,
         reducedMotion: "system"
@@ -1654,10 +1561,7 @@ h1 {
     return value === "empty" || value === "excluded" || value === "dog";
   }
   function readSettings(value) {
-    if (!isRecord(value)) {
-      return null;
-    }
-    if (typeof value.soundEffects !== "boolean") {
+    if (!isRecord(value) || typeof value.soundEffects !== "boolean") {
       return null;
     }
     if (value.reducedMotion !== "system" && value.reducedMotion !== "reduced") {
@@ -1693,14 +1597,14 @@ h1 {
     }
     return { kind: "marks", changes };
   }
-  function readSession(value, currentLevel2) {
+  function readSessionCore(value, currentLevel2) {
     if (value === null) {
       return null;
     }
     if (!isRecord(value) || !Array.isArray(value.marks)) {
       return void 0;
     }
-    if (!isPositiveInteger(value.level) || value.level !== currentLevel2 || typeof value.puzzleId !== "string" || value.puzzleId.length === 0 || !value.marks.every(isCellMark) || typeof value.treatsRemaining !== "number" || !Number.isInteger(value.treatsRemaining) || value.treatsRemaining < 0 || value.treatsRemaining > 3 || typeof value.started !== "boolean" || !isNonNegativeNumber(value.elapsedMs) || !value.started && value.elapsedMs !== 0) {
+    if (!isPositiveInteger(value.level) || value.level !== currentLevel2 || typeof value.puzzleId !== "string" || value.puzzleId.length === 0 || !value.marks.every(isCellMark)) {
       return void 0;
     }
     const marks = [...value.marks];
@@ -1708,30 +1612,66 @@ h1 {
     if (undo2 === void 0) {
       return void 0;
     }
-    return {
-      level: value.level,
-      puzzleId: value.puzzleId,
-      marks,
-      treatsRemaining: value.treatsRemaining,
-      started: value.started,
-      elapsedMs: value.elapsedMs,
-      undo: undo2
-    };
+    return { level: value.level, puzzleId: value.puzzleId, marks, undo: undo2 };
   }
-  function readBestTimes(value) {
-    if (!isRecord(value)) {
+  function readProgress(value) {
+    if (!isPositiveInteger(value.currentLevel) || !isPositiveInteger(value.latestUnlockedLevel)) {
       return null;
     }
-    const result = {};
-    for (const [level, time] of Object.entries(value)) {
-      if (!/^[1-9]\d*$/.test(level) || !isNonNegativeNumber(time)) {
-        return null;
-      }
-      result[level] = time;
+    const currentLevel2 = value.currentLevel;
+    const latestUnlockedLevel = value.latestUnlockedLevel;
+    if (currentLevel2 > latestUnlockedLevel || !Array.isArray(value.completedLevels)) {
+      return null;
     }
-    return result;
+    const completedLevels = [...value.completedLevels];
+    if (!completedLevels.every(isPositiveInteger) || completedLevels.some((level) => level > latestUnlockedLevel) || new Set(completedLevels).size !== completedLevels.length) {
+      return null;
+    }
+    return { currentLevel: currentLevel2, latestUnlockedLevel, completedLevels };
+  }
+  function parseV2Value(value) {
+    if (!isRecord(value)) {
+      return { status: "corrupted" };
+    }
+    if (value.schemaVersion !== SAVE_SCHEMA_VERSION) {
+      return typeof value.schemaVersion === "number" ? { status: "unsupported-schema" } : { status: "corrupted" };
+    }
+    const progress = readProgress(value);
+    const settings = readSettings(value.settings);
+    const session2 = progress ? readSessionCore(value.session, progress.currentLevel) : void 0;
+    if (progress === null || settings === null || session2 === void 0) {
+      return { status: "corrupted" };
+    }
+    return {
+      status: "ok",
+      data: { schemaVersion: SAVE_SCHEMA_VERSION, ...progress, settings, session: session2 }
+    };
   }
   function parseSaveData(raw) {
+    try {
+      return parseV2Value(JSON.parse(raw));
+    } catch {
+      return { status: "corrupted" };
+    }
+  }
+  function legacyRemovedFieldsAreValid(value) {
+    if (value === null) {
+      return true;
+    }
+    if (!isRecord(value)) {
+      return false;
+    }
+    return typeof value.treatsRemaining === "number" && Number.isInteger(value.treatsRemaining) && value.treatsRemaining >= 0 && value.treatsRemaining <= 3 && typeof value.started === "boolean" && isNonNegativeNumber(value.elapsedMs) && (value.started || value.elapsedMs === 0);
+  }
+  function legacyBestTimesAreValid(value) {
+    if (!isRecord(value)) {
+      return false;
+    }
+    return Object.entries(value).every(
+      ([level, time]) => /^[1-9]\d*$/.test(level) && isNonNegativeNumber(time)
+    );
+  }
+  function parseLegacySaveData(raw) {
     let value;
     try {
       value = JSON.parse(raw);
@@ -1741,41 +1681,21 @@ h1 {
     if (!isRecord(value)) {
       return { status: "corrupted" };
     }
-    if (value.schemaVersion !== SAVE_SCHEMA_VERSION) {
+    if (value.schemaVersion !== 1) {
       return typeof value.schemaVersion === "number" ? { status: "unsupported-schema" } : { status: "corrupted" };
     }
-    if (!isPositiveInteger(value.currentLevel) || !isPositiveInteger(value.latestUnlockedLevel)) {
-      return { status: "corrupted" };
-    }
-    const currentLevel2 = value.currentLevel;
-    const latestUnlockedLevel = value.latestUnlockedLevel;
-    if (currentLevel2 > latestUnlockedLevel || !Array.isArray(value.completedLevels)) {
-      return { status: "corrupted" };
-    }
-    const completedLevels = [...value.completedLevels];
-    if (!completedLevels.every(isPositiveInteger)) {
-      return { status: "corrupted" };
-    }
-    if (completedLevels.some((level) => level > latestUnlockedLevel) || new Set(completedLevels).size !== completedLevels.length) {
-      return { status: "corrupted" };
-    }
-    const bestTimesMs = readBestTimes(value.bestTimesMs);
+    const progress = readProgress(value);
     const settings = readSettings(value.settings);
-    const session2 = readSession(value.session, currentLevel2);
-    if (bestTimesMs === null || settings === null || session2 === void 0) {
+    if (progress === null || settings === null || !legacyBestTimesAreValid(value.bestTimesMs) || !legacyRemovedFieldsAreValid(value.session)) {
+      return { status: "corrupted" };
+    }
+    const session2 = readSessionCore(value.session, progress.currentLevel);
+    if (session2 === void 0) {
       return { status: "corrupted" };
     }
     return {
       status: "ok",
-      data: {
-        schemaVersion: SAVE_SCHEMA_VERSION,
-        currentLevel: currentLevel2,
-        latestUnlockedLevel,
-        completedLevels,
-        bestTimesMs,
-        settings,
-        session: session2
-      }
+      data: { schemaVersion: SAVE_SCHEMA_VERSION, ...progress, settings, session: session2 }
     };
   }
   function serializeSaveData(data) {
@@ -1842,6 +1762,36 @@ h1 {
       }
       return { data: parsed.data, status: "loaded", mode: this.mode, issue };
     }
+    migrateLegacy(raw) {
+      const parsed = parseLegacySaveData(raw);
+      if (parsed.status !== "ok") {
+        try {
+          this.primary?.removeItem(LEGACY_SAVE_STORAGE_KEY);
+        } catch {
+          this.degrade();
+        }
+        return {
+          data: createDefaultSaveData(),
+          status: "recovered",
+          mode: this.mode,
+          issue: this.consumePendingIssue() ?? parsed.status
+        };
+      }
+      const serialized = serializeSaveData(parsed.data);
+      this.memory.setItem(SAVE_STORAGE_KEY, serialized);
+      try {
+        this.primary?.setItem(SAVE_STORAGE_KEY, serialized);
+        this.primary?.removeItem(LEGACY_SAVE_STORAGE_KEY);
+      } catch {
+        this.degrade();
+      }
+      return {
+        data: parsed.data,
+        status: "loaded",
+        mode: this.mode,
+        issue: this.consumePendingIssue()
+      };
+    }
     load() {
       if (this.primary === null) {
         return this.loadFromMemory();
@@ -1849,12 +1799,13 @@ h1 {
       let raw;
       try {
         raw = this.primary.getItem(SAVE_STORAGE_KEY);
+        if (raw === null) {
+          const legacy = this.primary.getItem(LEGACY_SAVE_STORAGE_KEY);
+          return legacy === null ? { data: createDefaultSaveData(), status: "empty", mode: this.mode } : this.migrateLegacy(legacy);
+        }
       } catch {
         this.degrade();
         return this.loadFromMemory();
-      }
-      if (raw === null) {
-        return { data: createDefaultSaveData(), status: "empty", mode: this.mode };
       }
       const parsed = parseSaveData(raw);
       if (parsed.status === "ok") {
@@ -1867,12 +1818,11 @@ h1 {
         this.degrade();
       }
       this.memory.removeItem(SAVE_STORAGE_KEY);
-      const pendingIssue = this.consumePendingIssue();
       return {
         data: createDefaultSaveData(),
         status: "recovered",
         mode: this.mode,
-        issue: pendingIssue ?? parsed.status
+        issue: this.consumePendingIssue() ?? parsed.status
       };
     }
     save(data) {
@@ -1908,6 +1858,7 @@ h1 {
       }
       try {
         this.primary.removeItem(SAVE_STORAGE_KEY);
+        this.primary.removeItem(LEGACY_SAVE_STORAGE_KEY);
         return { mode: this.mode, durable: true };
       } catch {
         this.degrade();
@@ -1938,19 +1889,15 @@ h1 {
       changes: transaction.changes.map((change) => ({ ...change }))
     };
   }
-  function snapshotGameSession(level, session2, nowMs) {
+  function snapshotGameSession(level, session2) {
     if (session2.completed) {
       return null;
     }
-    const started = session2.timer.status !== "ready";
     const latestTransaction = session2.history.at(-1);
     return {
       level,
       puzzleId: session2.puzzleId,
       marks: [...session2.marks],
-      treatsRemaining: session2.treatsRemaining,
-      started,
-      elapsedMs: started ? elapsedMs(session2.timer, nowMs) : 0,
       undo: latestTransaction ? cloneTransaction(latestTransaction) : null
     };
   }
@@ -1991,28 +1938,22 @@ h1 {
       expectedKind = kind;
       seen.add(change.index);
     }
-    if (transaction.changes.length === 0 || expectedKind === null) {
-      return false;
-    }
-    return expectedKind === "exclude" || expectedKind === "clear-excluded" || transaction.changes.length === 1;
+    return transaction.changes.length > 0 && expectedKind !== null && (expectedKind === "exclude" || expectedKind === "clear-excluded" || transaction.changes.length === 1);
   }
-  function restoreGameSession(puzzle2, snapshot, nowMs) {
+  function restoreGameSession(puzzle2, snapshot) {
     let initial;
     try {
       initial = createGameSession(puzzle2);
     } catch {
       return null;
     }
-    if (snapshot.puzzleId !== puzzle2.id || snapshot.marks.length !== initial.marks.length || snapshot.treatsRemaining < 0 || snapshot.treatsRemaining > INITIAL_TREATS || !Number.isInteger(snapshot.treatsRemaining) || snapshot.elapsedMs < 0 || !Number.isFinite(snapshot.elapsedMs) || !snapshot.started && snapshot.elapsedMs !== 0 || !snapshot.started && snapshot.undo !== null) {
+    if (snapshot.puzzleId !== puzzle2.id || snapshot.marks.length !== initial.marks.length) {
       return null;
     }
     for (const [index, mark] of snapshot.marks.entries()) {
       if (!isCellMark2(mark) || mark === "dog" && !isCorrectDog(puzzle2, index)) {
         return null;
       }
-    }
-    if (!snapshot.started && snapshot.marks.some((mark) => mark !== "empty")) {
-      return null;
     }
     const solution = puzzle2.solution;
     if (solution !== void 0 && solution.every((col, row) => snapshot.marks[row * puzzle2.size + col] === "dog")) {
@@ -2024,9 +1965,7 @@ h1 {
     return {
       ...initial,
       marks: [...snapshot.marks],
-      treatsRemaining: snapshot.treatsRemaining,
-      history: snapshot.undo === null ? [] : [cloneTransaction(snapshot.undo)],
-      timer: snapshot.started ? { status: "running", elapsedMs: snapshot.elapsedMs, runningSinceMs: nowMs } : initial.timer
+      history: snapshot.undo === null ? [] : [cloneTransaction(snapshot.undo)]
     };
   }
 
@@ -2809,12 +2748,6 @@ h1 {
     row.append(copy, input);
     return [row, input];
   }
-  function formatElapsed(milliseconds) {
-    const totalSeconds = Math.floor(milliseconds / 1e3);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  }
   function markLabel(mark) {
     switch (mark) {
       case "dog":
@@ -2860,9 +2793,7 @@ h1 {
     const [levelStat, levelValue] = stat("Level", "level");
     levelValue.textContent = String(levelNumber);
     const [dogStat, dogCountValue] = stat("Dogs", "dog-count");
-    const [treatStat, treatsValue] = stat("Treats", "treats");
-    const [timerStat, timerValue] = stat("Time", "timer");
-    statusBar.append(levelStat, dogStat, treatStat, timerStat);
+    statusBar.append(levelStat, dogStat);
     const tutorialPanel = element("section", "tutorial-panel");
     tutorialPanel.dataset.testid = "tutorial";
     tutorialPanel.hidden = true;
@@ -2932,7 +2863,7 @@ h1 {
     const restartTitle = element("h2");
     restartTitle.textContent = "\u3053\u306E\u76E4\u9762\u3092\u6700\u521D\u304B\u3089\u3084\u308A\u76F4\u3057\u307E\u3059\u304B\uFF1F";
     const restartText = element("p");
-    restartText.textContent = "\u76E4\u9762\u30FBTreat\u30FB\u7D4C\u904E\u6642\u9593\u30FBUndo\u5C65\u6B74\u3092\u30EA\u30BB\u30C3\u30C8\u3057\u307E\u3059\u3002";
+    restartText.textContent = "\u76E4\u9762\u3068Undo\u5C65\u6B74\u3092\u30EA\u30BB\u30C3\u30C8\u3057\u307E\u3059\u3002";
     const restartActions = element("div", "dialog-actions");
     const restartCancelButton = element("button", "action-button action-button-secondary");
     restartCancelButton.type = "button";
@@ -2948,7 +2879,7 @@ h1 {
     const levelHeading = element("h2");
     levelHeading.textContent = "Levels";
     const levelIntro = element("p");
-    levelIntro.textContent = "Unlocked Level\u306F\u3044\u3064\u3067\u3082\u904A\u3079\u307E\u3059\u3002Cleared Level\u306FBest Time\u3092\u6B8B\u3057\u305F\u307E\u307E\u518D\u6311\u6226\u3067\u304D\u307E\u3059\u3002";
+    levelIntro.textContent = "Unlocked Level\u306F\u3044\u3064\u3067\u3082\u904A\u3079\u307E\u3059\u3002Cleared Level\u3082\u4F55\u5EA6\u3067\u3082\u518D\u6311\u6226\u3067\u304D\u307E\u3059\u3002";
     const levelPagination = element("div", "level-pagination");
     const levelPreviousButton = element("button", "level-page-button");
     levelPreviousButton.type = "button";
@@ -2997,12 +2928,6 @@ h1 {
     const clearHeading = element("h2");
     clearHeading.textContent = "\u3067\u304D\u305F\uFF01";
     const clearLevel = element("p", "clear-level");
-    const clearStats = element("div", "clear-stats");
-    const clearTime = element("strong");
-    clearTime.dataset.testid = "clear-time";
-    const clearBest = element("strong");
-    clearBest.dataset.testid = "clear-best";
-    clearStats.append(clearTime, clearBest);
     const clearNextButton = element("button", "action-button");
     clearNextButton.type = "button";
     clearNextButton.dataset.testid = "next-level";
@@ -3010,14 +2935,7 @@ h1 {
     const clearLevelsButton = element("button", "action-button action-button-secondary");
     clearLevelsButton.type = "button";
     clearLevelsButton.textContent = "Levels\u3092\u898B\u308B";
-    clearDialog.append(
-      clearMascot,
-      clearHeading,
-      clearLevel,
-      clearStats,
-      clearNextButton,
-      clearLevelsButton
-    );
+    clearDialog.append(clearMascot, clearHeading, clearLevel, clearNextButton, clearLevelsButton);
     shell.append(
       header,
       statusBar,
@@ -3035,8 +2953,6 @@ h1 {
       cells,
       levelValue,
       dogCountValue,
-      treatsValue,
-      timerValue,
       levelsButton,
       settingsButton,
       hintButton,
@@ -3062,34 +2978,26 @@ h1 {
       settingsCloseButton,
       clearDialog,
       clearLevel,
-      clearTime,
-      clearBest,
       clearNextButton,
       clearLevelsButton,
       feedback
     };
   }
-  function renderTimer(view2, timer, nowMs) {
-    view2.timerValue.textContent = formatElapsed(elapsedMs(timer, nowMs));
-  }
-  function renderSession(view2, puzzle2, session2, nowMs) {
+  function renderSession(view2, puzzle2, session2) {
     const models = createBoardCellModels(puzzle2, session2.marks);
     for (const model of models) {
       const cell = view2.cells[model.index];
       renderCellMark(cell, model.mark);
-      cell.disabled = session2.completed || session2.timer.status === "paused";
+      cell.disabled = session2.completed;
       cell.setAttribute(
         "aria-label",
         `\u884C${model.cell.row + 1} \u5217${model.cell.col + 1}: ${markLabel(model.mark)}`
       );
     }
     view2.board.dataset.completed = String(session2.completed);
-    view2.board.dataset.timerStatus = session2.timer.status;
     view2.dogCountValue.textContent = `${dogCount(session2)} / ${puzzle2.size}`;
-    view2.treatsValue.textContent = String(session2.treatsRemaining);
     view2.undoButton.disabled = !canUndo(session2);
-    view2.hintButton.disabled = session2.completed || session2.timer.status === "paused";
-    renderTimer(view2, session2.timer, nowMs);
+    view2.hintButton.disabled = session2.completed;
   }
   function clearHintClasses(view2) {
     for (const cell of view2.cells) {
@@ -3150,8 +3058,6 @@ h1 {
   }
   function renderClearSummary(view2, summary) {
     view2.clearLevel.textContent = `Level ${summary.levelNumber}`;
-    view2.clearTime.textContent = `Time ${formatElapsed(summary.clearTimeMs)}`;
-    view2.clearBest.textContent = `Best ${formatElapsed(summary.bestTimeMs)}`;
     view2.clearNextButton.hidden = !summary.hasNextLevel;
   }
 
@@ -3200,7 +3106,7 @@ h1 {
   var currentLevel = resolveStartupLevel(saveData);
   var runtimeLevel = requireRuntimeLevel(currentLevel);
   var puzzle = runtimeLevel.puzzle;
-  var session = restoreStartupSession(puzzle, currentLevel, saveData, performance.now());
+  var session = restoreStartupSession(puzzle, currentLevel, saveData);
   var hintState = createIdleHintState();
   var view;
   var unbindBoardInteractions = () => {
@@ -3221,11 +3127,11 @@ h1 {
     }
     return clampRuntimeLevel(data.latestUnlockedLevel);
   }
-  function restoreStartupSession(targetPuzzle, levelNumber, data, nowMs) {
+  function restoreStartupSession(targetPuzzle, levelNumber, data) {
     if (data.session?.level !== levelNumber) {
       return createGameSession(targetPuzzle);
     }
-    return restoreGameSession(targetPuzzle, data.session, nowMs) ?? createGameSession(targetPuzzle);
+    return restoreGameSession(targetPuzzle, data.session) ?? createGameSession(targetPuzzle);
   }
   function updatePersistenceStatus(mode, issue) {
     root.dataset.persistence = mode;
@@ -3239,20 +3145,16 @@ h1 {
     const write = persistence.save(saveData);
     updatePersistenceStatus(write.mode, write.issue);
   }
-  function persistCurrentSession(nowMs) {
+  function persistCurrentSession() {
     saveData = {
       ...saveData,
       currentLevel,
       latestUnlockedLevel: Math.max(saveData.latestUnlockedLevel, currentLevel),
-      session: snapshotGameSession(currentLevel, session, nowMs)
+      session: snapshotGameSession(currentLevel, session)
     };
     writeSaveData();
   }
-  function recordCompletion(nowMs) {
-    const clearTimeMs = elapsedMs(session.timer, nowMs);
-    const key = String(currentLevel);
-    const previousBest = saveData.bestTimesMs[key];
-    const bestTimeMs = previousBest === void 0 ? clearTimeMs : Math.min(previousBest, clearTimeMs);
+  function recordCompletion() {
     const completedLevels = [.../* @__PURE__ */ new Set([...saveData.completedLevels, currentLevel])].sort(
       (a, b) => a - b
     );
@@ -3262,10 +3164,6 @@ h1 {
       currentLevel,
       latestUnlockedLevel: Math.max(saveData.latestUnlockedLevel, nextUnlocked),
       completedLevels,
-      bestTimesMs: {
-        ...saveData.bestTimesMs,
-        [key]: bestTimeMs
-      },
       session: null
     };
     writeSaveData();
@@ -3280,7 +3178,7 @@ h1 {
     window.setTimeout(() => target?.classList.remove("cell-error"), 420);
   }
   function shouldAutosave(result) {
-    return result.outcome === "changed" || result.outcome === "mistake" || result.outcome === "undone" || result.outcome === "restarted";
+    return result.outcome === "changed" || result.outcome === "undone" || result.outcome === "restarted";
   }
   function shouldInvalidateHint(result) {
     return result.outcome === "changed" || result.outcome === "undone" || result.outcome === "restarted";
@@ -3324,22 +3222,18 @@ h1 {
       sfx.play("mark");
     }
   }
-  function renderCurrent(nowMs) {
-    renderSession(view, puzzle, session, nowMs);
+  function renderCurrent() {
+    renderSession(view, puzzle, session);
     renderHint(view, puzzle, getHintPresentation(puzzle, hintState));
     const tutorialEnabled = currentLevel === 1 && !saveData.completedLevels.includes(1);
     renderTutorial(view, getActiveTutorialStep(runtimeLevel, session, tutorialEnabled));
   }
-  function scheduleClearDialog(nowMs) {
+  function scheduleClearDialog() {
     if (clearTransitionTimer !== null) {
       window.clearTimeout(clearTransitionTimer);
     }
-    const clearTimeMs = elapsedMs(session.timer, nowMs);
-    const bestTimeMs = saveData.bestTimesMs[String(currentLevel)] ?? clearTimeMs;
     renderClearSummary(view, {
       levelNumber: currentLevel,
-      clearTimeMs,
-      bestTimeMs,
       hasNextLevel: currentLevel < RUNTIME_LEVELS.length
     });
     clearTransitionTimer = window.setTimeout(() => {
@@ -3349,16 +3243,15 @@ h1 {
       }
     }, 300);
   }
-  function dispatch(action, options) {
-    const nowMs = performance.now();
+  function dispatch(action) {
     const wasCompleted = session.completed;
-    const result = reduceGameSession(puzzle, session, action, nowMs);
+    const result = reduceGameSession(puzzle, session, action);
     session = result.session;
     if (shouldInvalidateHint(result)) {
       hintState = createIdleHintState();
     }
     if (result.outcome === "mistake" && result.mistakeCell) {
-      setFeedback("\u305D\u3053\u306B\u306F\u72AC\u3092\u7F6E\u3051\u307E\u305B\u3093\u3002Treat\u30921\u3064\u4F7F\u3044\u307E\u3057\u305F\u3002");
+      setFeedback("\u305D\u3053\u306B\u306F\u72AC\u3092\u7F6E\u3051\u307E\u305B\u3093\u3002");
       showMistake(result.mistakeCell);
     } else if (result.outcome === "changed" || result.outcome === "undone") {
       setFeedback("");
@@ -3369,13 +3262,13 @@ h1 {
     playActionSfx(action, result, justCompleted);
     if (justCompleted) {
       setFeedback("\u3067\u304D\u305F\uFF01 \u30AF\u30EA\u30A2\u7D50\u679C\u3092\u8A18\u9332\u3057\u307E\u3057\u305F\u3002");
-      recordCompletion(nowMs);
-    } else if (shouldAutosave(result) || result.outcome === "timer" && options?.autosaveTimer) {
-      persistCurrentSession(nowMs);
+      recordCompletion();
+    } else if (shouldAutosave(result)) {
+      persistCurrentSession();
     }
-    renderCurrent(nowMs);
+    renderCurrent();
     if (justCompleted) {
-      scheduleClearDialog(nowMs);
+      scheduleClearDialog();
     }
     return result;
   }
@@ -3428,21 +3321,12 @@ h1 {
   function renderLevelSelectPage() {
     renderLevelSelect(view, createLevelPageModel(), selectLevelFromDialog);
   }
-  function resumeAfterOverlay() {
-    if (document.visibilityState === "visible" && !session.completed) {
-      dispatch(resumeSessionTimer());
-    }
-  }
   function closeLevelSelect() {
     if (view.levelDialog.open) {
       view.levelDialog.close();
     }
-    resumeAfterOverlay();
   }
   function openLevelSelect() {
-    if (!session.completed) {
-      dispatch(pauseSessionTimer(), { autosaveTimer: true });
-    }
     levelSelectPageIndex = pageIndexForLevel(currentLevel, RUNTIME_LEVELS.length);
     renderLevelSelectPage();
     view.levelDialog.showModal();
@@ -3451,12 +3335,8 @@ h1 {
     if (view.settingsDialog.open) {
       view.settingsDialog.close();
     }
-    resumeAfterOverlay();
   }
   function openSettings() {
-    if (!session.completed) {
-      dispatch(pauseSessionTimer(), { autosaveTimer: true });
-    }
     syncSettingsView();
     view.settingsDialog.showModal();
   }
@@ -3515,12 +3395,10 @@ h1 {
       closeSettings();
     });
     view.restartButton.addEventListener("click", () => {
-      dispatch(pauseSessionTimer());
       view.restartDialog.showModal();
     });
     view.restartCancelButton.addEventListener("click", () => {
       view.restartDialog.close();
-      resumeAfterOverlay();
     });
     view.restartConfirmButton.addEventListener("click", () => {
       view.restartDialog.close();
@@ -3529,7 +3407,6 @@ h1 {
     view.restartDialog.addEventListener("cancel", (event) => {
       event.preventDefault();
       view.restartDialog.close();
-      resumeAfterOverlay();
     });
     view.clearDialog.addEventListener("cancel", (event) => {
       event.preventDefault();
@@ -3550,7 +3427,7 @@ h1 {
     applyMotionPreference();
     syncSettingsView();
     bindCurrentView();
-    renderCurrent(performance.now());
+    renderCurrent();
   }
   function loadLevel(levelNumber, restoreSavedSession) {
     if (clearTransitionTimer !== null) {
@@ -3561,15 +3438,14 @@ h1 {
     runtimeLevel = requireRuntimeLevel(currentLevel);
     puzzle = runtimeLevel.puzzle;
     hintState = createIdleHintState();
-    const nowMs = performance.now();
-    session = restoreSavedSession ? restoreStartupSession(puzzle, currentLevel, saveData, nowMs) : createGameSession(puzzle);
+    session = restoreSavedSession ? restoreStartupSession(puzzle, currentLevel, saveData) : createGameSession(puzzle);
     saveData = {
       ...saveData,
       currentLevel,
       latestUnlockedLevel: Math.max(saveData.latestUnlockedLevel, currentLevel)
     };
     mountView();
-    persistCurrentSession(nowMs);
+    persistCurrentSession();
   }
   mountView();
   motionMediaQuery.addEventListener("change", () => {
@@ -3578,10 +3454,8 @@ h1 {
     }
   });
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") {
-      dispatch(pauseSessionTimer(), { autosaveTimer: true });
-    } else if (!view.restartDialog.open && !view.levelDialog.open && !view.settingsDialog.open && !view.clearDialog.open) {
-      dispatch(resumeSessionTimer());
+    if (document.visibilityState === "hidden" && !session.completed) {
+      persistCurrentSession();
     }
   });
   document.addEventListener("keydown", (event) => {
@@ -3598,9 +3472,6 @@ h1 {
       showNextHint();
     }
   });
-  window.setInterval(() => {
-    renderTimer(view, session.timer, performance.now());
-  }, 250);
 })();
 
     </script>
