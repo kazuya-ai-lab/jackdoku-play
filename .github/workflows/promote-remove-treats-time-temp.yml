@@ -1,0 +1,44 @@
+name: Promote TREATS/TIME removal temp
+
+on:
+  push:
+    branches:
+      - feat/distribution-remove-treats-time
+    paths:
+      - .github/workflows/promote-remove-treats-time-temp.yml
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    env:
+      ARTIFACT_URL: 'https://sdmntprindiasocentral.oaiusercontent.com/files/00000000-49fc-8211-badc-3bee7f79f6f5/raw?se=2026-09-16T05%3A05%3A47Z&sp=r&sv=2026-02-06&sr=b&scid=a87b3628-dbb5-57c7-9dbd-e8b139b1ba30&skoid=0765b554-4b90-4fa2-9d6d-0055a2427910&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-16T01%3A11%3A06Z&ske=2026-09-17T01%3A11%3A06Z&sks=b&skv=2026-02-06&sig=40xzFlM7JltqQuOCxkPWmtfp60hcDIRvhTwpefIOF0k%3D'
+      EXPECTED_SHA256: '9478c61df88044d58dfe97ed351bf1223fcfe9329f05875f4554ee79886c2d10'
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v7
+        with:
+          ref: feat/distribution-remove-treats-time
+
+      - name: Download accepted artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error "$ARTIFACT_URL" --output index.html
+          echo "$EXPECTED_SHA256  index.html" | sha256sum --check --strict
+
+      - name: Commit promoted artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'Artifact already matches.'
+            exit 0
+          fi
+          git commit -m 'feat(distribution): TREATS/TIME削除版Artifactを反映' -m 'Private mainのPlaytest Package Run #8で検証済みのArtifactを内容変更なしで反映する。'
+          git push origin HEAD:feat/distribution-remove-treats-time
