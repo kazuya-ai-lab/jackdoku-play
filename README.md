@@ -18,8 +18,10 @@ https://kazuya-ai-lab.github.io/jackdoku-play/
 
 ## Current distribution
 
-- Source: `kazuya-ai-lab/jackdoku` `d12277802ee3dbc6ab85c9600c1a36f1c569f385`
-- Source workflow: Playtest Package Run #4
-- Public main: `073fb2f9903c0632c123a474e814b1dcce268783`
-- Artifact SHA-256: `5ebcd9b118a3fbe70a65115c03f056cc4e7dded31beb799f24ae61477ef06d3a`
-- Pages deployment: SUCCESS
+- Source: `kazuya-ai-lab/jackdoku` `2e7a7d205d6fc10db9b01f84784443f0c4a87611`
+- Source change: PR #21 `feat(levels): 200レベルBankと10,000対応基盤を追加`
+- Source workflow: Playtest Package Run #7
+- Playable levels: 200
+- Artifact size: 210,992 bytes
+- Artifact SHA-256: `83c79ae666aff350c127f5d4a8fdde8c371db88eea761bd0e93017b371dbc6eb`
+- Pages deployment: PR Merge後に`main`から自動再配信
