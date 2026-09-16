@@ -5,11 +5,14 @@
 ## Current distribution
 
 - Source repository: `kazuya-ai-lab/jackdoku` (Private)
-- Source `main` commit: `e2fbc2e5dbd96f6ad941d2919318dcfdd6b6f4ae`
-- Source change: `fix(board): 犬配置時のセル伸長を防止 (#18)`
-- Playtest Package run: `#5`
+- Source `main` commit: `2e7a7d205d6fc10db9b01f84784443f0c4a87611`
+- Source change: `feat(levels): 200レベルBankと10,000対応基盤を追加 (#21)`
+- Playtest Package run: `#7`
 - Artifact: `Jackdoku.html`
-- Artifact SHA-256: `b6364659a359812496a90c17a953a00a2820470dec554fb45bf021b67c63a9f9`
+- Artifact size: `210992 bytes`
+- Artifact SHA-256: `83c79ae666aff350c127f5d4a8fdde8c371db88eea761bd0e93017b371dbc6eb`
+- Artifact Git Blob SHA-1: `9280f02f7fc52c817d0baff3ecdb0bfad0965c64`
+- Playable levels: `200`
 - Distribution target: `index.html`
 
 ## Promotion rule
