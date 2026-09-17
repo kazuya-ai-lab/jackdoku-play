@@ -18,12 +18,13 @@ https://kazuya-ai-lab.github.io/jackdoku-play/
 
 ## Current distribution
 
-- Source: `kazuya-ai-lab/jackdoku` `fde1e03274631013e49238a1372328f4d6e0710b`
-- Source change: PR #24 `feat(levels): Production Bankを1,000レベルへ拡張`
-- Source workflow: Playtest Package Run #9
+- Source: `kazuya-ai-lab/jackdoku` `1a4f4e9f18cd6a20294fd4abac8d87b63a9e7af0`
+- Source change: PR #27 `feat(ux): Human Playtestを反映して9×9上限と盤面視認性を改善`
+- Source workflow: Playtest Package Run #11
 - Playable levels: 1,000
-- Board progression: 5×5〜12×12
+- Board progression: 5×5〜9×9
+- Level 161〜1,000: 9×9
 - Status: `Level / Dogs`のみ（TREATS / TIMEなし）
-- Artifact size: 831,284 bytes
-- Artifact SHA-256: `1fab0b5e9351302c0c689c01e98dcfc77d8eb7dabf935d69b5f2ca3d065c6545`
+- Artifact size: 691,798 bytes
+- Artifact SHA-256: `2bbd171c63c217034c515afb801054af1563d83d4ffe11a44a99a05ec2f987ac`
 - Pages deployment: PR Merge後に`main`から自動再配信
