@@ -1,0 +1,53 @@
+name: Promote Accepted Artifact
+
+on:
+  push:
+    branches:
+      - feat/promote-9x9-human-playtest
+    paths:
+      - .github/workflows/promote-artifact.yml
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download and verify accepted artifact
+        shell: bash
+        env:
+          ARTIFACT_URL: 'https://sdmntprcentralus.oaiusercontent.com/files/00000000-cc5c-81f5-b1c4-5c07b750cb31/raw?se=2026-09-17T10%3A31%3A31Z&sp=r&sv=2026-02-06&sr=b&scid=d574bba2-aea5-5ea0-b8a4-8cf203220d40&skoid=0765b554-4b90-4fa2-9d6d-0055a2427910&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-17T01%3A01%3A10Z&ske=2026-09-18T01%3A01%3A10Z&sks=b&skv=2026-02-06&sig=Kz4UBCcDOvJNy61a79Dh1NXGxyjf58QQi6XRsb0wnFU%3D'
+          EXPECTED_SHA256: '2bbd171c63c217034c515afb801054af1563d83d4ffe11a44a99a05ec2f987ac'
+        run: |
+          set -euo pipefail
+          curl --fail --location "$ARTIFACT_URL" --output artifact.payload
+
+          if unzip -t artifact.payload >/dev/null 2>&1; then
+            unzip -p artifact.payload Jackdoku.html > candidate.html
+          else
+            cp artifact.payload candidate.html
+          fi
+
+          actual="$(sha256sum candidate.html | cut -d' ' -f1)"
+          test "$actual" = "$EXPECTED_SHA256"
+          grep -qi '<!doctype html>' candidate.html
+          cp candidate.html index.html
+          echo "Verified accepted artifact SHA-256: $actual"
+
+      - name: Commit promoted artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'index.html is already current.'
+            exit 0
+          fi
+          git commit -m 'feat(distribution): 9×9上限版Artifactを昇格' -m 'Private mainのPlaytest Package Run #11で検証済みのArtifactをSHA-256照合後、そのままindex.htmlとして反映する。'
+          git push origin HEAD:feat/promote-9x9-human-playtest
