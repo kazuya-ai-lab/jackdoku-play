@@ -18,13 +18,16 @@ https://kazuya-ai-lab.github.io/jackdoku-play/
 
 ## Current distribution
 
-- Source: `kazuya-ai-lab/jackdoku` `1a4f4e9f18cd6a20294fd4abac8d87b63a9e7af0`
-- Source change: PR #27 `feat(ux): Human Playtestを反映して9×9上限と盤面視認性を改善`
-- Source workflow: Playtest Package Run #11
-- Playable levels: 1,000
+- Source: `kazuya-ai-lab/jackdoku` `e962cf6dcd416decba18ebd15e3c6b6ea8858768`
+- Source change: PR #29 `feat(levels): 2,000問Bankと犬SVG操作UIへ更新`
+- Source workflow: Playtest Package Run #12
+- Playable levels: 2,000
 - Board progression: 5×5〜9×9
-- Level 161〜1,000: 9×9
+- Level 161〜2,000: 9×9
+- Level Select: 50件Paging / 40 pages
+- Mobile Dog input: Jack Russell Terrier inline SVG
+- Hint: Player UIでは非提供
 - Status: `Level / Dogs`のみ（TREATS / TIMEなし）
-- Artifact size: 691,798 bytes
-- Artifact SHA-256: `2bbd171c63c217034c515afb801054af1563d83d4ffe11a44a99a05ec2f987ac`
+- Artifact size: 1,277,351 bytes
+- Artifact SHA-256: `05cf2961c1acec681ee1cadeb2b0dde8f16648cb9897fb97d43a4e8bb5e7f778`
 - Pages deployment: PR Merge後に`main`から自動再配信
