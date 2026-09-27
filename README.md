@@ -18,14 +18,14 @@ https://kazuya-ai-lab.github.io/jackdoku-play/
 
 ## Current distribution
 
-- Source: `kazuya-ai-lab/jackdoku` `80337653392657346009cdfaa6712f773e71799f`
-- Source change: PR #30 `feat(game): タップ入力刷新とProduction Bank 3,000問化`
-- Source workflow: Playtest Package Run #13
+- Source: `kazuya-ai-lab/jackdoku` `08cce5db8f15d7b8510202280704056de52db769`
+- Source change: PR #32 `fix(input): シングルタップ待機を200msへ短縮`
+- Source workflow: Playtest Package Run #15
 - Playable levels: 3,000
 - Board progression: 5×5〜9×9
 - Level 161〜3,000: 9×9
 - Level Select: 50件Paging / 60 pages
-- Single Tap / Click: ×
+- Single Tap / Click: ×（Double Tap判定待機 200ms）
 - Double Tap / Double Click: Jack Russell Terrier
 - Swipe / Drag: ×を一括入力
 - 入力Mode切替Button: 非提供
@@ -33,5 +33,5 @@ https://kazuya-ai-lab.github.io/jackdoku-play/
 - Hint: Player UIでは非提供
 - Status: `Level / Dogs`のみ（TREATS / TIMEなし）
 - Artifact size: 1,879,841 bytes
-- Artifact SHA-256: `758f43db33705f604181fb6a2979b349570a70d560088459f71f7e7d532d9c86`
+- Artifact SHA-256: `9dc69c4e8d605ffd49f688cd01a24cf8bd70fd4f66665a849c6a23bcea024cce`
 - Pages deployment: PR Merge後に`main`から自動再配信
