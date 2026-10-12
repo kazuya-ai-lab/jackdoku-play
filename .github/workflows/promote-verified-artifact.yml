@@ -1,0 +1,40 @@
+name: Promote Verified Artifact (temporary)
+
+on:
+  push:
+    branches:
+      - feat/distribution-levels-5000-dark-mode
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+
+      - name: Download exact verified artifact
+        shell: bash
+        env:
+          ARTIFACT_DOWNLOAD_URL: "https://sdmntprcentralus.oaiusercontent.com/files/00000000-c518-81f5-b407-d6324f30079c/raw?se=2026-10-12T03%3A52%3A15Z&sp=r&sv=2026-02-06&sr=b&scid=39320533-903d-55e8-9f10-728c408268c0&skoid=0765b554-4b90-4fa2-9d6d-0055a2427910&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-10-12T01%3A16%3A18Z&ske=2026-10-13T01%3A16%3A18Z&sks=b&skv=2026-02-06&sig=lfxmXNUKXjbu/M37TCbX1BgShrual9pRVI7lqTgWhsc%3D"
+        run: |
+          set -euo pipefail
+          curl --fail --show-error --silent --location --retry 3 --output index.html "$ARTIFACT_DOWNLOAD_URL"
+          test "$(wc -c < index.html)" -eq 3099191
+          printf '%s  %s\n' '79ac8f7541729be27cc79a8e85156b5b457ccf665deb8a6a490ca1d05a41c7fb' 'index.html' | sha256sum --check
+          test "$(git hash-object index.html)" = '08df40053d57b6c2c053103156ca264672047c5a'
+
+      - name: Commit release candidate and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html README.md PROVENANCE.md
+          git rm .github/workflows/promote-verified-artifact.yml
+          git commit -m "feat(distribution): 5,000問とダークモードの検証済みHTMLを反映"
+          git push
