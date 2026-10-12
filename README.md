@@ -18,20 +18,21 @@ https://kazuya-ai-lab.github.io/jackdoku-play/
 
 ## Current distribution
 
-- Source: `kazuya-ai-lab/jackdoku` `08cce5db8f15d7b8510202280704056de52db769`
-- Source change: PR #32 `fix(input): シングルタップ待機を200msへ短縮`
-- Source workflow: Playtest Package Run #15
-- Playable levels: 3,000
+- Source: `kazuya-ai-lab/jackdoku` `e4f95af7b346ae81a05d5a9e6075728935ca6dc0`
+- Source change: PR #33 `feat(game): レベルを4,000へ拡張しテキスト選択を抑止`
+- Source workflow: Playtest Package Run #16
+- Playable levels: 4,000
 - Board progression: 5×5〜9×9
-- Level 161〜3,000: 9×9
-- Level Select: 50件Paging / 60 pages
+- Level 161〜4,000: 9×9
+- Level Select: 50件Paging / 80 pages
 - Single Tap / Click: ×（Double Tap判定待機 200ms）
 - Double Tap / Double Click: Jack Russell Terrier
 - Swipe / Drag: ×を一括入力
 - 入力Mode切替Button: 非提供
 - Right Click: Jack Russell Terrier（PC）
+- Text selection: ゲームUIで抑止（Touch calloutも抑止）
 - Hint: Player UIでは非提供
 - Status: `Level / Dogs`のみ（TREATS / TIMEなし）
-- Artifact size: 1,879,841 bytes
-- Artifact SHA-256: `9dc69c4e8d605ffd49f688cd01a24cf8bd70fd4f66665a849c6a23bcea024cce`
+- Artifact size: 2,486,450 bytes
+- Artifact SHA-256: `6a90eb05f7ca918cd96401b703e7a60a8f22b8514c545a03f92bb66269650ba3`
 - Pages deployment: PR Merge後に`main`から自動再配信

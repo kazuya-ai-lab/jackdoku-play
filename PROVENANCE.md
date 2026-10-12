@@ -5,20 +5,24 @@
 ## Current distribution
 
 - Source repository: `kazuya-ai-lab/jackdoku` (Private)
-- Source `main` commit: `08cce5db8f15d7b8510202280704056de52db769`
-- Source change: `fix(input): シングルタップ待機を200msへ短縮 (#32)`
-- Playtest Package run: `#15`
+- Source `main` commit: `e4f95af7b346ae81a05d5a9e6075728935ca6dc0`
+- Source change: `feat(game): レベルを4,000へ拡張しテキスト選択を抑止 (#33)`
+- Playtest Package run: `#16`
+- Playtest Package workflow run ID: `38186743107`
+- Artifact ID: `11720116833`
 - Artifact: `Jackdoku.html`
-- Artifact size: `1879841 bytes`
-- Artifact SHA-256: `9dc69c4e8d605ffd49f688cd01a24cf8bd70fd4f66665a849c6a23bcea024cce`
-- Artifact Git Blob SHA-1: `99f8611e3c7159fb32a58a358ff0518f15f598ba`
-- Playable levels: `3000`
+- Artifact size: `2486450 bytes`
+- Artifact SHA-256: `6a90eb05f7ca918cd96401b703e7a60a8f22b8514c545a03f92bb66269650ba3`
+- Artifact Git Blob SHA-1: `fe6f7819b614ff78077535e156718bf5be4470ee`
+- Playable levels: `4000`
 - Board progression: `5x5`〜`9x9`
-- Level 161〜3000: `9x9`
+- Level 161〜4000: `9x9`
 - Level 1〜200 Published prefix SHA-256: `9fc0e8c60ca3695f667c08bd54b049d8cfcb2c302cb9b5cd7dab5e4dc6c0681b`
-- Level 1〜2000 Compatibility prefix SHA-256: `aea24b369f78070051921728f4a82c3af8f918b5f6fdd2ef46e87011e80db1ab`
+- Level 1〜3000 Compatibility prefix SHA-256: `056d61addba4de72c6ab415e418797894042b9a08527462b976661619c592cb4`
 - Primary input: Single Tap / Click = ×, Double Tap / Double Click = Jack, Swipe / Drag = bulk ×
 - Single Tap arbitration window: `200ms`
+- Level Select: 50件Paging / 80 pages
+- Text selection: ゲームUIで抑止（Touch calloutも抑止）
 - Distribution target: `index.html`
 
 ## Promotion rule
