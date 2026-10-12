@@ -18,9 +18,9 @@ https://kazuya-ai-lab.github.io/jackdoku-play/
 
 ## Current distribution
 
-- Source: `kazuya-ai-lab/jackdoku` `64382f36c10d7565de0dae6c98e058701b6dcfee`
-- Source change: PR #39 `fix(ux): ライト境界を3pxに揃えダーク枠線を青みグレーへ改善`
-- Source workflow: Playtest Package Run #22
+- Source: `kazuya-ai-lab/jackdoku` `d04ec030d9f56a1142d6e1f99d725d344d31fa9d`
+- Source change: PR #40 `fix(ux): ダーク盤面を落ち着いた低輝度の9色に調整`
+- Source workflow: Playtest Package Run #23
 - Playable levels: 5,000
 - Board progression: 5×5〜9×9
 - Level 161〜5,000: 9×9
@@ -33,11 +33,11 @@ https://kazuya-ai-lab.github.io/jackdoku-play/
 - Text selection: ゲームUIで抑止（Touch calloutも抑止）
 - Theme: 端末設定に追従 / ライト / ダーク（設定をSave v2へ保存）
 - Light board: 外枠・Region境界をともに各辺CSS 3pxに統一。通常のCell gridは1pxを維持
-- Dark board: 明るく鮮やかな9色を維持。外枠とRegion境界をスレートグレー #5b6975 に統一。×は従来の濃い青墨色 #18262f を維持
+- Dark board: 眩しさを抑えた低輝度・色相の異なる9色へ変更。外枠とRegion境界は柔らかいスレートグレー #98a6b0、×はオフホワイト #e4e8e8。境界線の幅3pxを維持
 - Compact layout: スマホ縦画面・低背PCでHeader / Level / Dogs / Board / Actions / Tutorial / Helpを残して画面高さに収める（極端に短い画面はスクロール許容）
 - Scroll control: 1画面表示中は盤面外の縦スワイプによるページ移動・跳ね返りを抑制。Dialog内スクロールとピンチ拡大を維持
 - Hint: Player UIでは非提供
 - Status: `Level / Dogs`のみ（TREATS / TIMEなし）
-- Artifact size: 3,103,792 bytes
-- Artifact SHA-256: `021de174ef99a1abe78509258dd63753ca236802b52323b585b8dceb38548930`
+- Artifact size: 3,103,783 bytes
+- Artifact SHA-256: `fb61b96f4632dedb94844733d0405aa0bfe99f93a7601aad5c931ea64d740225`
 - Pages deployment: PR Merge後に`main`から自動再配信
