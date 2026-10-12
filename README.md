@@ -18,9 +18,9 @@ https://kazuya-ai-lab.github.io/jackdoku-play/
 
 ## Current distribution
 
-- Source: `kazuya-ai-lab/jackdoku` `806e5cdaf511c5452daf2047caceb68ea6a772ed`
-- Source change: PR #34 `feat(game): 5,000レベル化とダークモードを追加`
-- Source workflow: Playtest Package Run #17
+- Source: `kazuya-ai-lab/jackdoku` `48677bf8e0e47716aafa3cde7854bb2aec0b68a2`
+- Source change: PR #35 `fix(ux): ダーク盤面の配色と1画面に収まるプレイUIを改善`
+- Source workflow: Playtest Package Run #18
 - Playable levels: 5,000
 - Board progression: 5×5〜9×9
 - Level 161〜5,000: 9×9
@@ -32,8 +32,10 @@ https://kazuya-ai-lab.github.io/jackdoku-play/
 - Right Click: Jack Russell Terrier（PC）
 - Text selection: ゲームUIで抑止（Touch calloutも抑止）
 - Theme: 端末設定に追従 / ライト / ダーク（設定をSave v2へ保存）
+- Dark board: 低彩度・識別しやすい9色、白を避けた青墨色の境界と×
+- Compact layout: スマホ縦画面・低背PCでHeader / Level / Dogs / Board / Actions / Tutorial / Helpを残して画面高さに収める（極端に短い画面はスクロール許容）
 - Hint: Player UIでは非提供
 - Status: `Level / Dogs`のみ（TREATS / TIMEなし）
-- Artifact size: 3,099,191 bytes
-- Artifact SHA-256: `79ac8f7541729be27cc79a8e85156b5b457ccf665deb8a6a490ca1d05a41c7fb`
+- Artifact size: 3,102,684 bytes
+- Artifact SHA-256: `3c8948d31b2716e583c840b8c3f393a996059f09255695ebb9300e0507e0a206`
 - Pages deployment: PR Merge後に`main`から自動再配信
