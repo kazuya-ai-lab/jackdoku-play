@@ -635,8 +635,8 @@ h1 {
 
 .board {
   grid-template-rows: repeat(var(--board-size), minmax(0, 1fr));
-  /* Light: 2px frame; adjoining region cells each draw 1px (= 2px visible). */
-  border-width: 2px;
+  /* Light: match the dark region border width (3px per region-cell edge). */
+  border-width: 3px;
   background: #cbc1af;
 }
 
@@ -644,21 +644,21 @@ h1 {
   border-color: rgba(72, 66, 56, 0.38);
 }
 
-/* Do not change the dark theme's 3px region boundaries. */
+/* Both themes now use a 3px region border per cell; dark color is separately themed. */
 :root:not([data-theme='dark']) .board-cell.region-top {
-  border-top-width: 1px;
+  border-top-width: 3px;
 }
 
 :root:not([data-theme='dark']) .board-cell.region-right {
-  border-right-width: 1px;
+  border-right-width: 3px;
 }
 
 :root:not([data-theme='dark']) .board-cell.region-bottom {
-  border-bottom-width: 1px;
+  border-bottom-width: 3px;
 }
 
 :root:not([data-theme='dark']) .board-cell.region-left {
-  border-left-width: 1px;
+  border-left-width: 3px;
 }
 
 .cell-x {
@@ -834,14 +834,14 @@ h1 {
 }
 
 /*
- * Dark mode: vivid, lighter categorical colors with clear hue separation.
- * Uniform dark outline/region borders are intentional (same ink and width).
- * Ink and region edges remain >=3:1 against every fill. Human review decides
- * actual readability; numeric color difference is only a regression check.
+ * Dark mode: vivid region colors with a single slate-gray stroke for
+ * both the outside frame and all region dividers. This balances outer-frame
+ * visibility against the background with legibility on the bright cells.
+ * X marks stay dark for strong contrast; actual readability is human-checked.
  */
 :root[data-theme='dark'] .board {
   background: #202d34;
-  border: 3px solid #18262f;
+  border: 3px solid #5b6975;
   box-shadow: 0 0.9rem 2.2rem rgba(0, 0, 0, 0.2);
 }
 
@@ -851,19 +851,19 @@ h1 {
 }
 
 :root[data-theme='dark'] .board-cell.region-top {
-  border-top-color: #18262f;
+  border-top-color: #5b6975;
 }
 
 :root[data-theme='dark'] .board-cell.region-right {
-  border-right-color: #18262f;
+  border-right-color: #5b6975;
 }
 
 :root[data-theme='dark'] .board-cell.region-bottom {
-  border-bottom-color: #18262f;
+  border-bottom-color: #5b6975;
 }
 
 :root[data-theme='dark'] .board-cell.region-left {
-  border-left-color: #18262f;
+  border-left-color: #5b6975;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='0'] {
