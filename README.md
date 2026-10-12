@@ -18,9 +18,9 @@ https://kazuya-ai-lab.github.io/jackdoku-play/
 
 ## Current distribution
 
-- Source: `kazuya-ai-lab/jackdoku` `b3cb39c5d9ec7070a187c0a40e52c8b3c4902bf7`
-- Source change: PR #38 `fix(ux): ライト盤面の外枠と色境界を2pxへ統一`
-- Source workflow: Playtest Package Run #21
+- Source: `kazuya-ai-lab/jackdoku` `64382f36c10d7565de0dae6c98e058701b6dcfee`
+- Source change: PR #39 `fix(ux): ライト境界を3pxに揃えダーク枠線を青みグレーへ改善`
+- Source workflow: Playtest Package Run #22
 - Playable levels: 5,000
 - Board progression: 5×5〜9×9
 - Level 161〜5,000: 9×9
@@ -32,12 +32,12 @@ https://kazuya-ai-lab.github.io/jackdoku-play/
 - Right Click: Jack Russell Terrier（PC）
 - Text selection: ゲームUIで抑止（Touch calloutも抑止）
 - Theme: 端末設定に追従 / ライト / ダーク（設定をSave v2へ保存）
-- Light board: 外枠と色領域の境界線を、どちらも見た目2pxに統一（領域境界は隣接セルの1px＋1px）
-- Dark board: くすみを抑えた明るく鮮やかな9色。外枠と領域区切り線を黒系（#18262f）で統一し、×にも同色を使用
+- Light board: 外枠・Region境界をともに各辺CSS 3pxに統一。通常のCell gridは1pxを維持
+- Dark board: 明るく鮮やかな9色を維持。外枠とRegion境界をスレートグレー #5b6975 に統一。×は従来の濃い青墨色 #18262f を維持
 - Compact layout: スマホ縦画面・低背PCでHeader / Level / Dogs / Board / Actions / Tutorial / Helpを残して画面高さに収める（極端に短い画面はスクロール許容）
 - Scroll control: 1画面表示中は盤面外の縦スワイプによるページ移動・跳ね返りを抑制。Dialog内スクロールとピンチ拡大を維持
 - Hint: Player UIでは非提供
 - Status: `Level / Dogs`のみ（TREATS / TIMEなし）
-- Artifact size: 3,103,771 bytes
-- Artifact SHA-256: `a73a661ee0ea72b463ef98a492a2d65707c4c1fdd38e98bc177316330db5a9e9`
+- Artifact size: 3,103,792 bytes
+- Artifact SHA-256: `021de174ef99a1abe78509258dd63753ca236802b52323b585b8dceb38548930`
 - Pages deployment: PR Merge後に`main`から自動再配信
