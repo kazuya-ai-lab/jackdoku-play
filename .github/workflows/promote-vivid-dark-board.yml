@@ -1,0 +1,40 @@
+name: Promote Vivid Dark Board Artifact (temporary)
+
+on:
+  push:
+    branches:
+      - fix/distribution-light-frame-vivid-dark
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+
+      - name: Promote validated single HTML without modification
+        shell: bash
+        env:
+          ARTIFACT_DOWNLOAD_URL: "https://sdmntprbrazilsouth.oaiusercontent.com/files/00000000-6c78-820e-a965-d75a782b62c5/raw?se=2026-10-12T07%3A52%3A56Z&sp=r&sv=2026-02-06&sr=b&scid=7c2a7b4c-4d09-52b3-8c85-e30923439d4d&skoid=1a0ef048-201c-43e0-8950-52d58956a71a&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-10-12T01%3A35%3A19Z&ske=2026-10-13T01%3A35%3A19Z&sks=b&skv=2026-02-06&sig=Rjv2i1l6c3cCGc6YUP4%2BRaN3To8iVWBHgMKbGK1VGBo%3D"
+        run: |
+          set -euo pipefail
+          curl --fail --show-error --silent --location --retry 3 --output index.html "$ARTIFACT_DOWNLOAD_URL"
+          test "$(wc -c < index.html)" -eq 3103370
+          printf '%s  %s\n' '0c1afa8f3ef7562c8470a659ef944d4648ad56d6a11950debe589a919f12a7c0' 'index.html' | sha256sum --check
+          test "$(git hash-object index.html)" = 'a233287fb01f8a75571a728fc10a4f1177d656f9'
+
+      - name: Record candidate and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html README.md PROVENANCE.md
+          git rm .github/workflows/promote-vivid-dark-board.yml
+          git commit -m "fix(distribution): ライト細枠と鮮明なダーク盤面を配布候補へ反映"
+          git push
