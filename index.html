@@ -815,14 +815,13 @@ h1 {
 }
 
 /*
- * Dark mode: same luminance (approximately L*=51), moderate chroma, and
- * evenly separated hues. The dark ink for marks and region edges avoids
- * bright white grids; every tone stays above 3:1 against that ink.
- * Region boundaries (3px) carry shape information independent of hue.
+ * Dark mode: L*≈53 with moderately increased C*≈31 and 40-degree hue
+ * separation. The bright enough region colors preserve 3:1 contrast with
+ * dark marks and separators; the outer border alone uses visible gray.
  */
 :root[data-theme='dark'] .board {
   background: #202d34;
-  border-color: #18262f;
+  border-color: #8a9498;
   box-shadow: 0 0.9rem 2.2rem rgba(0, 0, 0, 0.2);
 }
 
@@ -848,39 +847,39 @@ h1 {
 }
 
 :root[data-theme='dark'] .board-cell[data-region='0'] {
-  background: #50846a;
+  background: #488c6b;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='1'] {
-  background: #a16d5f;
+  background: #af6e5d;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='2'] {
-  background: #6879a3;
+  background: #667eb3;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='3'] {
-  background: #727f54;
+  background: #74854f;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='4'] {
-  background: #a2697a;
+  background: #b16980;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='5'] {
-  background: #3e819e;
+  background: #2388ad;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='6'] {
-  background: #8f7650;
+  background: #987a4a;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='7'] {
-  background: #8e6f95;
+  background: #9871a1;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='8'] {
-  background: #348587;
+  background: #0b8d90;
 }
 
 :root[data-theme='dark'] .cell-x {
@@ -966,12 +965,31 @@ h1 {
  * viewports, when keeping touch targets usable requires more room.
  */
 @media (max-width: 760px) and (min-height: 480px) {
+  /*
+   * The whole compact game is visible, so prevent the root page from
+   * elastic bouncing / pull-to-refresh. Only the game surface suppresses
+   * single-finger panning; pinch zoom stays available. Dialogs are DOM
+   * siblings of .game-shell and retain their own native scrolling.
+   */
+  html,
   body,
   #app {
-    min-height: 100dvh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  .restart-dialog,
+  .level-dialog,
+  .settings-dialog,
+  .clear-dialog {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .game-shell {
+    touch-action: pinch-zoom;
     height: 100dvh;
     min-height: 0;
     display: flex;

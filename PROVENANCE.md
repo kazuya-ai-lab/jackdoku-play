@@ -5,15 +5,15 @@
 ## Current distribution
 
 - Source repository: `kazuya-ai-lab/jackdoku` (Private)
-- Source `main` commit: `48677bf8e0e47716aafa3cde7854bb2aec0b68a2`
-- Source change: `fix(ux): ダーク盤面の配色と1画面に収まるプレイUIを改善 (#35)`
-- Playtest Package run: `#18`
-- Playtest Package workflow run ID: `38203071188`
-- Artifact ID: `11726695197`
+- Source `main` commit: `b0be5e8632aa350b323ef933508739b60566709b`
+- Source change: `fix(ux): 盤面外のスクロール抑止とダーク配色の微調整 (#36)`
+- Playtest Package run: `#19`
+- Playtest Package workflow run ID: `38207243085`
+- Artifact ID: `11727718039`
 - Artifact: `Jackdoku.html`
-- Artifact size: `3102684 bytes`
-- Artifact SHA-256: `3c8948d31b2716e583c840b8c3f393a996059f09255695ebb9300e0507e0a206`
-- Artifact Git Blob SHA-1: `70264b0543ad5aae5c22b4aaa6312aa4028b1829`
+- Artifact size: `3103172 bytes`
+- Artifact SHA-256: `556a5166675091ef9ac2f41a427e6fdb253c68eb6a5b3519de220c692617720b`
+- Artifact Git Blob SHA-1: `2fe899f3303d1e484b7c7c344085589a24f753a9`
 - Playable levels: `5000`
 - Board progression: `5x5`〜`9x9`
 - Level 161〜5000: `9x9`
@@ -24,8 +24,9 @@
 - Level Select: 50件Paging / 100 pages
 - Text selection: ゲームUIで抑止（Touch calloutも抑止）
 - Display theme: system / light / dark、設定値をSave v2に互換保存
-- Dark board: 低彩度の9色、青墨色のRegion境界 / Cell grid / ×に変更。色差とContrastの回帰テストを通過
+- Dark board: 彩度を適度に高めた9色と、背景から判別しやすいグレー系外枠。青墨色のRegion境界 / Cell grid / ×は維持。色差とContrast検査を通過
 - Responsive gameplay: Smartphone portrait / 低背DesktopでLevel、Dogs、Controls、Tutorial、Helpを省略せずViewport高さへ収める
+- Scroll behavior: コンパクトスマホ画面のページスクロール / Bounceを抑止。Dialog内スクロール、ピンチ拡大、低背画面Fallbackを維持
 - Distribution target: `index.html`
 
 ## Promotion rule
