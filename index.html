@@ -635,6 +635,8 @@ h1 {
 
 .board {
   grid-template-rows: repeat(var(--board-size), minmax(0, 1fr));
+  /* Keep the light-mode outline slim even when neighboring region edges are thick. */
+  border-width: 1px;
   background: #cbc1af;
 }
 
@@ -815,13 +817,14 @@ h1 {
 }
 
 /*
- * Dark mode: L*≈53 with moderately increased C*≈31 and 40-degree hue
- * separation. The bright enough region colors preserve 3:1 contrast with
- * dark marks and separators; the outer border alone uses visible gray.
+ * Dark mode: vivid, lighter categorical colors with clear hue separation.
+ * Uniform dark outline/region borders are intentional (same ink and width).
+ * Ink and region edges remain >=3:1 against every fill. Human review decides
+ * actual readability; numeric color difference is only a regression check.
  */
 :root[data-theme='dark'] .board {
   background: #202d34;
-  border-color: #8a9498;
+  border: 3px solid #18262f;
   box-shadow: 0 0.9rem 2.2rem rgba(0, 0, 0, 0.2);
 }
 
@@ -847,39 +850,39 @@ h1 {
 }
 
 :root[data-theme='dark'] .board-cell[data-region='0'] {
-  background: #488c6b;
+  background: #ff8387;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='1'] {
-  background: #af6e5d;
+  background: #ffaa5d;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='2'] {
-  background: #667eb3;
+  background: #ebd45c;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='3'] {
-  background: #74854f;
+  background: #7fd375;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='4'] {
-  background: #b16980;
+  background: #38cda5;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='5'] {
-  background: #2388ad;
+  background: #57c5f2;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='6'] {
-  background: #987a4a;
+  background: #8ba9ff;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='7'] {
-  background: #9871a1;
+  background: #b994fa;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='8'] {
-  background: #0b8d90;
+  background: #f08dd5;
 }
 
 :root[data-theme='dark'] .cell-x {
