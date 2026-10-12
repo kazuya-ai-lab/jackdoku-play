@@ -635,13 +635,30 @@ h1 {
 
 .board {
   grid-template-rows: repeat(var(--board-size), minmax(0, 1fr));
-  /* Keep the light-mode outline slim even when neighboring region edges are thick. */
-  border-width: 1px;
+  /* Light: 2px frame; adjoining region cells each draw 1px (= 2px visible). */
+  border-width: 2px;
   background: #cbc1af;
 }
 
 .board-cell {
   border-color: rgba(72, 66, 56, 0.38);
+}
+
+/* Do not change the dark theme's 3px region boundaries. */
+:root:not([data-theme='dark']) .board-cell.region-top {
+  border-top-width: 1px;
+}
+
+:root:not([data-theme='dark']) .board-cell.region-right {
+  border-right-width: 1px;
+}
+
+:root:not([data-theme='dark']) .board-cell.region-bottom {
+  border-bottom-width: 1px;
+}
+
+:root:not([data-theme='dark']) .board-cell.region-left {
+  border-left-width: 1px;
 }
 
 .cell-x {
