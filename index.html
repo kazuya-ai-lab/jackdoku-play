@@ -834,76 +834,76 @@ h1 {
 }
 
 /*
- * Dark mode: vivid region colors with a single slate-gray stroke for
- * both the outside frame and all region dividers. This balances outer-frame
- * visibility against the background with legibility on the bright cells.
- * X marks stay dark for strong contrast; actual readability is human-checked.
+ * Dark mode: nine low-glare, medium-dark tones with matched luminance and
+ * separated hues. The lighter slate border remains distinguishable from the
+ * dark page and the subdued region fills. X marks use soft off-white ink;
+ * subjective eye comfort still requires human playtesting.
  */
 :root[data-theme='dark'] .board {
   background: #202d34;
-  border: 3px solid #5b6975;
+  border: 3px solid #98a6b0;
   box-shadow: 0 0.9rem 2.2rem rgba(0, 0, 0, 0.2);
 }
 
 :root[data-theme='dark'] .board-cell {
-  border-color: rgba(24, 38, 47, 0.4);
-  color: #18262f;
+  border-color: rgba(220, 232, 238, 0.18);
+  color: #e4e8e8;
 }
 
 :root[data-theme='dark'] .board-cell.region-top {
-  border-top-color: #5b6975;
+  border-top-color: #98a6b0;
 }
 
 :root[data-theme='dark'] .board-cell.region-right {
-  border-right-color: #5b6975;
+  border-right-color: #98a6b0;
 }
 
 :root[data-theme='dark'] .board-cell.region-bottom {
-  border-bottom-color: #5b6975;
+  border-bottom-color: #98a6b0;
 }
 
 :root[data-theme='dark'] .board-cell.region-left {
-  border-left-color: #5b6975;
+  border-left-color: #98a6b0;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='0'] {
-  background: #ff8387;
+  background: #96515e;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='1'] {
-  background: #ffaa5d;
+  background: #8f583f;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='2'] {
-  background: #ebd45c;
+  background: #756431;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='3'] {
-  background: #7fd375;
+  background: #516e3d;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='4'] {
-  background: #38cda5;
+  background: #1e725c;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='5'] {
-  background: #57c5f2;
+  background: #28747d;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='6'] {
-  background: #8ba9ff;
+  background: #086d95;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='7'] {
-  background: #b994fa;
+  background: #5b6296;
 }
 
 :root[data-theme='dark'] .board-cell[data-region='8'] {
-  background: #f08dd5;
+  background: #855680;
 }
 
 :root[data-theme='dark'] .cell-x {
-  color: #18262f;
+  color: #e4e8e8;
 }
 
 :root[data-theme='dark'] .action-button {
